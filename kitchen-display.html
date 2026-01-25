@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Display - Odoo Cafe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="frontend/css/output.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="relative min-h-screen bg-white">
+        <div
+            class="fixed -top-40 -left-40 w-[520px] h-[520px] bg-[#FFDEE9] opacity-60 blur-[100px] rounded-full pointer-events-none">
+        </div>
+        <div
+            class="fixed bottom-[-220px] right-[-220px] w-[620px] h-[620px] bg-[#B5FFFC] opacity-60 blur-[120px] rounded-full pointer-events-none">
+        </div>
+
+        <header class="sticky top-0 z-30 bg-white/60 backdrop-blur-md border-b border-slate-100">
+            <div class="px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <span class="text-xl font-bold text-slate-800">
+                        <span
+                            class="bg-gradient-to-r from-[#FFDEE9] to-[#B5FFFC] bg-clip-text text-transparent">Odoo</span>
+                        Kitchen
+                    </span>
+                    <span id="orderCount" class="bg-slate-900 px-3 py-1 rounded-full text-white text-sm font-medium">0
+                        orders</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="currentTime" class="text-slate-500 font-mono"></span>
+                    <button id="logoutBtn"
+                        class="p-2 text-slate-400 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-all"
+                        title="Logout">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="h-[calc(100vh-64px)] p-6 relative z-10">
+            <div id="loadingState" class="h-full flex items-center justify-center">
+                <div class="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
+            </div>
+
+            <div id="kitchenContent" class="hidden h-full">
+                <div class="grid grid-cols-3 gap-6 h-full">
+                    <!-- To Cook Column -->
+                    <div class="flex flex-col h-full">
+                        <div
+                            class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-t-2xl px-4 py-3 flex items-center justify-between shadow-lg">
+                            <div class="flex items-center gap-2 text-white">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                    </path>
+                                </svg>
+                                <span class="font-bold text-lg">To Cook</span>
+                            </div>
+                            <span id="toCookCount"
+                                class="bg-white/20 px-3 py-1 rounded-full text-white text-sm font-medium">0</span>
+                        </div>
+                        <div id="toCookOrders"
+                            class="flex-1 bg-white/60 backdrop-blur-sm rounded-b-2xl p-3 overflow-auto space-y-3 border border-t-0 border-slate-100">
+                        </div>
+                    </div>
+
+                    <!-- Preparing Column -->
+                    <div class="flex flex-col h-full">
+                        <div
+                            class="bg-gradient-to-r from-amber-500 to-amber-600 rounded-t-2xl px-4 py-3 flex items-center justify-between shadow-lg">
+                            <div class="flex items-center gap-2 text-white">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="font-bold text-lg">Preparing</span>
+                            </div>
+                            <span id="preparingCount"
+                                class="bg-white/20 px-3 py-1 rounded-full text-white text-sm font-medium">0</span>
+                        </div>
+                        <div id="preparingOrders"
+                            class="flex-1 bg-white/60 backdrop-blur-sm rounded-b-2xl p-3 overflow-auto space-y-3 border border-t-0 border-slate-100">
+                        </div>
+                    </div>
+
+                    <!-- Ready Column -->
+                    <div class="flex flex-col h-full">
+                        <div
+                            class="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-t-2xl px-4 py-3 flex items-center justify-between shadow-lg">
+                            <div class="flex items-center gap-2 text-white">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                    </path>
+                                </svg>
+                                <span class="font-bold text-lg">Ready</span>
+                            </div>
+                            <span id="readyCount"
+                                class="bg-white/20 px-3 py-1 rounded-full text-white text-sm font-medium">0</span>
+                        </div>
+                        <div id="readyOrders"
+                            class="flex-1 bg-white/60 backdrop-blur-sm rounded-b-2xl p-3 overflow-auto space-y-3 border border-t-0 border-slate-100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="frontend/js/constants.js"></script>
+    <script src="frontend/js/api.js"></script>
+    <script src="frontend/js/auth.js"></script>
+    <script src="frontend/js/formatters.js"></script>
+    <script src="frontend/js/components/toast.js"></script>
+    <script src="frontend/js/kitchen/display.js"></script>
+</body>
+
+</html>

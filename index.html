@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, viewport-fit=cover">
+    <title>Odoo Cafe | Premium Cafe & Food Experience</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <!-- Tailwind Configuration -->
+    <script src="frontend/js/tailwind.config.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="frontend/css/styles.css">
+</head>
+
+<body>
+    <!-- Loader -->
+    <div id="loader-wrap" class="loader-wrap" style="clip-path: circle(150% at 50% 50%);">
+        <div class="loader-ambient"></div>
+        <div class="loader-orb"></div>
+        <div class="loader-orbit loader-orbit-1"></div>
+        <div class="loader-orbit loader-orbit-2"></div>
+        <div class="loader-orbit loader-orbit-3"></div>
+        <div class="loader-corner loader-corner-tl"></div>
+        <div class="loader-corner loader-corner-tr"></div>
+        <div class="loader-corner loader-corner-bl"></div>
+        <div class="loader-corner loader-corner-br"></div>
+        <div class="loader-logo-wrap">
+            <div class="loader-logo">Odoo Cafe</div>
+            <div class="loader-tagline">
+                <span class="loader-tagline-letter">P</span><span class="loader-tagline-letter">R</span><span class="loader-tagline-letter">E</span><span class="loader-tagline-letter">M</span><span class="loader-tagline-letter">I</span><span class="loader-tagline-letter">U</span><span class="loader-tagline-letter">M</span><span class="loader-tagline-letter">&nbsp;</span><span class="loader-tagline-letter">D</span><span class="loader-tagline-letter">I</span><span class="loader-tagline-letter">N</span><span class="loader-tagline-letter">I</span><span class="loader-tagline-letter">N</span><span class="loader-tagline-letter">G</span><span class="loader-tagline-letter">&nbsp;</span><span class="loader-tagline-letter">E</span><span class="loader-tagline-letter">X</span><span class="loader-tagline-letter">P</span><span class="loader-tagline-letter">E</span><span class="loader-tagline-letter">R</span><span class="loader-tagline-letter">I</span><span class="loader-tagline-letter">E</span><span class="loader-tagline-letter">N</span><span class="loader-tagline-letter">C</span><span class="loader-tagline-letter">E</span>
+            </div>
+            <div class="loader-progress-wrap">
+                <div class="loader-progress-container">
+                    <div id="loader-progress-bar" class="loader-progress-bar"></div>
+                </div>
+                <div id="loader-percent" class="loader-percent">0%</div>
+            </div>
+            <button type="button" id="loader-skip" class="loader-skip" style="display: none;">Skip Intro</button>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="min-h-screen w-full max-w-[100vw] overflow-x-hidden relative" style="display: none;">
+        <div id="flash-overlay" class="fixed inset-0 z-[100] pointer-events-none" style="opacity: 0;"></div>
+        <div id="main-content-wrap" class="w-full max-w-[100vw] overflow-x-hidden">
+            <!-- Navbar -->
+            <header class="w-full">
+                <nav id="navbar" class="nav-premium-blur px-3 sm:px-6 lg:px-8">
+                    <div class="max-w-7xl mx-auto flex justify-between items-center h-14 sm:h-16 md:h-[4.5rem]">
+                        <a href="#home" id="nav-logo" class="font-serif text-lg sm:text-2xl md:text-3xl font-black flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
+                            <span id="nav-logo-icon" class="flex items-center justify-center"></span>
+                            <span class="truncate">Odoo Cafe</span>
+                        </a>
+                        <div class="hidden lg:flex gap-6 xl:gap-8 font-serif font-semibold text-sm tracking-wider text-white/90">
+                            <a href="#home" class="hover:opacity-100 opacity-85 transition-all relative group py-2">HOME</a>
+                            <a href="#menu" class="hover:opacity-100 opacity-85 transition-all relative group py-2">MENU</a>
+                            <a href="#features-section" class="hover:opacity-100 opacity-85 transition-all relative group py-2">ABOUT</a>
+                            <a href="#contact" class="hover:opacity-100 opacity-85 transition-all relative group py-2">CONTACT</a>
+                        </div>
+                        <div class="flex items-center gap-2 sm:gap-3">
+                            <a href="login.html" class="hidden md:flex items-center gap-2 text-sm font-bold text-white/90 px-4 py-2.5 rounded-full transition-all hover:scale-105 border border-white/20 hover:border-white/40 min-h-[44px] no-underline" style="background: rgba(255, 255, 255, 0.06);">
+                                <svg class="location-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span>Find Us</span>
+                            </a>
+                            <a href="login.html" id="nav-order-btn" class="flex items-center gap-2 text-sm font-bold px-4 sm:px-5 py-2.5 rounded-full transition-all hover:scale-105 relative overflow-hidden group min-h-[44px] no-underline">
+                                <svg class="cart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                                <span class="hidden sm:inline">Order</span>
+                                <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-400"></span>
+                            </a>
+                            <button type="button" id="nav-mobile-toggle" class="lg:hidden flex flex-col justify-center items-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg border border-white/20 text-white/90 hover:bg-white/5 transition-all gap-1.5" aria-label="Toggle menu">
+                                <span class="nav-hamburger nav-hamburger-1 w-5 h-0.5 bg-current rounded-full transition-all duration-200"></span>
+                                <span class="nav-hamburger nav-hamburger-2 w-5 h-0.5 bg-current rounded-full transition-all duration-200"></span>
+                                <span class="nav-hamburger nav-hamburger-3 w-5 h-0.5 bg-current rounded-full transition-all duration-200"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="nav-mobile-dropdown" class="lg:hidden overflow-hidden transition-all duration-300 ease-out max-h-0 opacity-0" data-open="false">
+                        <div class="px-4 pb-4 pt-2 border-t border-white/5 flex flex-col gap-1">
+                            <a href="#home" class="nav-mobile-link py-3 px-4 rounded-lg font-serif font-semibold text-sm tracking-wider text-white/90 hover:bg-white/5">HOME</a>
+                            <a href="#menu" class="nav-mobile-link py-3 px-4 rounded-lg font-serif font-semibold text-sm tracking-wider text-white/90 hover:bg-white/5">MENU</a>
+                            <a href="#features-section" class="nav-mobile-link py-3 px-4 rounded-lg font-serif font-semibold text-sm tracking-wider text-white/90 hover:bg-white/5">ABOUT</a>
+                            <a href="#contact" class="nav-mobile-link py-3 px-4 rounded-lg font-serif font-semibold text-sm tracking-wider text-white/90 hover:bg-white/5">CONTACT</a>
+                            <a href="login.html" class="md:hidden mt-2 flex items-center justify-center gap-2 text-sm font-bold text-white/90 px-4 py-3 rounded-lg border border-white/20 hover:bg-white/5 transition-all no-underline">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span>Find Us</span>
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+            </header>
+
+            <main id="main-content" class="min-h-screen w-full max-w-[100vw]">
+                <!-- Hero -->
+                <section id="home" class="snap-section relative h-screen w-full flex flex-col items-center justify-center overflow-hidden px-4 sm:px-6">
+                    <div class="absolute inset-0 bg-noise pointer-events-none"></div>
+                    <div id="hero-gradient" class="absolute inset-0 pointer-events-none"></div>
+                    <div id="three-container" class="absolute inset-0 z-0 pointer-events-none w-full h-full overflow-hidden" style="min-height: 100%;"></div>
+                    <h1 id="hero-bg-text" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[18vw] sm:text-[22vw] md:text-[20vw] font-serif font-black opacity-[0.08] leading-none select-none pointer-events-none whitespace-nowrap">COFFEE</h1>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center z-10 pt-4 pb-28 sm:pb-36 md:pb-40">
+                        <div id="hero-text" class="text-center w-full max-w-2xl mx-auto px-2 sm:px-4">
+                            <div id="hero-badge" class="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full mb-4 sm:mb-6 border">
+                                <span id="hero-badge-emoji" class="text-xl sm:text-2xl animate-pulse">☕</span>
+                                <span id="hero-badge-label" class="text-xs sm:text-sm font-bold tracking-widest">COFFEE SPECIAL</span>
+                            </div>
+                            <h1 class="font-serif text-3xl sm:text-5xl md:text-7xl lg:text-8xl text-white font-bold leading-tight mb-4 sm:mb-6">
+                                <span id="hero-headline-1">Freshly Brewed</span><br>
+                                <span id="hero-headline-2" class="inline-block">Happiness</span>
+                            </h1>
+                            <p id="hero-subtext" class="max-w-xl mx-auto text-sm sm:text-base md:text-xl text-white/90 font-light mb-6 sm:mb-10 px-1">Premium beans, perfect roast, unforgettable taste</p>
+                            <div class="flex flex-wrap gap-3 sm:gap-4 justify-center pointer-events-auto">
+                                <a href="login.html" id="hero-cta-order" class="group flex items-center gap-2 sm:gap-3 px-5 py-3 sm:px-8 sm:py-4 text-sm sm:text-base md:text-lg rounded-full font-bold transition-all hover:scale-105 min-h-[44px] no-underline">
+                                    <span>🛒</span> Order Now <span class="group-hover:translate-x-1 transition-transform">→</span>
+                                </a>
+                                <a href="login.html" class="flex items-center gap-2 px-5 py-3 sm:px-8 sm:py-4 text-sm sm:text-base md:text-lg rounded-full font-bold hover:scale-105 transition-all border border-white/20 hover:border-white/40 min-h-[44px] text-white no-underline" style="background: rgba(255, 255, 255, 0.05);">
+                                    <span>📋</span> View Menu
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="mode-buttons" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 sm:gap-2 z-40 pointer-events-auto"></div>
+                    <div class="absolute bottom-4 right-4 sm:bottom-8 sm:right-8 hidden md:flex flex-col items-center gap-2 text-white/40 text-xs tracking-widest">
+                        <span class="rotate-90">SCROLL</span>
+                        <div class="w-px h-16 bg-gradient-to-b from-white/40 to-transparent animate-pulse"></div>
+                    </div>
+                </section>
+
+                <!-- Stats -->
+                <section id="stats-section" class="snap-section min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden px-4 sm:px-6 lg:px-8 py-12">
+                    <div id="stats-gradient" class="absolute inset-0"></div>
+                    <div class="max-w-6xl w-full mx-auto">
+                        <div id="stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8"></div>
+                    </div>
+                    <div id="stats-marquee-wrap" class="marquee-wrap w-full py-4 sm:py-6 md:py-8 overflow-hidden whitespace-nowrap mt-8 sm:mt-12 md:mt-16 rounded-xl sm:rounded-2xl">
+                        <div class="inline-flex animate-marquee" id="stats-marquee-inner"></div>
+                    </div>
+                </section>
+
+                <!-- Features -->
+                <section id="features-section" class="snap-section min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden px-4 sm:px-6 lg:px-8 py-12">
+                    <div class="absolute inset-0 bg-noise pointer-events-none"></div>
+                    <div class="max-w-6xl w-full mx-auto relative">
+                        <div class="text-center mb-8 sm:mb-12 md:mb-16">
+                            <span id="features-badge" class="feature-heading inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest mb-3 sm:mb-4">WHY CHOOSE US</span>
+                            <h2 class="feature-heading font-serif text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-3 sm:mb-4">The <span id="features-mode-label">COFFEE</span> Experience</h2>
+                            <p class="feature-heading text-white/85 max-w-2xl mx-auto text-sm sm:text-base">Discover what makes us different. Quality ingredients, expert preparation, and passion in every bite.</p>
+                        </div>
+                        <div id="features-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"></div>
+                    </div>
+                </section>
+
+                <!-- Menu -->
+                <section id="menu" class="snap-section min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden px-4 sm:px-6 lg:px-8 py-12">
+                    <div id="menu-gradient" class="absolute inset-0"></div>
+                    <div class="max-w-6xl w-full mx-auto relative">
+                        <div class="text-center mb-8 sm:mb-12 md:mb-16">
+                            <span id="menu-badge" class="menu-heading inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest mb-3 sm:mb-4">OUR MENU</span>
+                            <h2 class="menu-heading font-serif text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-3 sm:mb-4">Popular <span id="menu-mode-label">COFFEE</span> Items</h2>
+                            <p class="menu-heading text-white/85 max-w-2xl mx-auto text-sm sm:text-base">Hand-picked favorites loved by our customers</p>
+                        </div>
+                        <div id="menu-items" class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"></div>
+                        <div class="menu-heading text-center mt-8 sm:mt-12">
+                            <a href="login.html" id="menu-view-full" class="inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-4 rounded-full font-bold text-white border-2 hover:scale-105 transition-transform duration-300 group text-sm sm:text-base min-h-[44px] no-underline">View Full Menu <span class="group-hover:translate-x-1 transition-transform">→</span></a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Testimonials -->
+                <section id="testimonials-section" class="snap-section min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden px-4 sm:px-6 lg:px-8 py-12">
+                    <div class="absolute inset-0 bg-noise pointer-events-none"></div>
+                    <div class="max-w-6xl w-full mx-auto relative">
+                        <div class="text-center mb-8 sm:mb-12 md:mb-16">
+                            <span id="testimonials-badge" class="test-heading inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest mb-3 sm:mb-4">TESTIMONIALS</span>
+                            <h2 class="test-heading font-serif text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-3 sm:mb-4">What People <span id="testimonials-accent">Say</span></h2>
+                        </div>
+                        <div id="testimonials-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"></div>
+                    </div>
+                </section>
+
+                <!-- Quote -->
+                <section id="quote-section" class="snap-section min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden px-4 sm:px-6 py-12">
+                    <div id="quote-gradient" class="absolute inset-0"></div>
+                    <div class="relative z-10 max-w-4xl w-full mx-auto text-center">
+                        <div class="quote-mark text-5xl sm:text-6xl md:text-8xl mb-4 sm:mb-8 opacity-30" id="quote-mark">"</div>
+                        <h2 class="quote-text font-serif text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold text-white leading-relaxed mb-6 sm:mb-8 px-2 sm:px-4" id="quote-text"></h2>
+                        <div class="quote-badge inline-flex items-center gap-2 sm:gap-3 px-4 py-2.5 sm:px-6 sm:py-3 rounded-full hover-lift cursor-default" id="quote-badge">
+                            <span id="quote-emoji" class="text-xl sm:text-2xl">☕</span>
+                            <span id="quote-brand" class="font-bold">Odoo Cafe</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CTA -->
+                <section id="contact" class="snap-section min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden px-4 sm:px-6 lg:px-8 py-12">
+                    <div class="max-w-4xl w-full mx-auto">
+                        <div id="cta-card" class="cta-card glass rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-12 text-center relative overflow-hidden animate-subtle-pulse">
+                            <div id="cta-banner" class="absolute top-0 left-0 right-0 z-20 py-2 sm:py-3 px-4 text-center animate-pulse">
+                                <span id="cta-banner-text" class="text-xs sm:text-sm md:text-base font-bold tracking-widest uppercase">🚀 Coming Soon — Online Ordering! 🚀</span>
+                            </div>
+                            <div id="cta-gradient" class="absolute inset-0"></div>
+                            <div class="relative z-10 pt-6 sm:pt-8">
+                                <span id="cta-emoji" class="cta-inner text-5xl sm:text-6xl md:text-8xl block mb-4 sm:mb-6">☕</span>
+                                <h2 class="cta-inner font-serif text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-3 sm:mb-4">Ready to <span id="cta-accent">Order?</span></h2>
+                                <p class="cta-inner text-white/85 mb-6 sm:mb-8 max-w-xl mx-auto text-sm sm:text-base">Join thousands of happy customers. Order online for pickup or delivery.</p>
+                                <div class="cta-inner flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                                    <a href="login.html" id="cta-order-btn" class="group flex items-center justify-center gap-2 px-6 py-3 sm:px-8 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-transform hover:scale-105 min-h-[44px] no-underline"><span class="group-hover:scale-110 transition-transform inline-block">🛒</span> Order Online</a>
+                                    <a href="login.html" class="group flex items-center justify-center gap-2 px-6 py-3 sm:px-8 sm:py-4 rounded-full font-bold text-base sm:text-lg border-2 text-white hover:scale-105 transition-transform min-h-[44px] no-underline" id="cta-call-btn"><span class="group-hover:rotate-12 transition-transform inline-block">📞</span> Call Us</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Footer -->
+            <footer id="footer" class="pt-12 sm:pt-16 pb-6 sm:pb-8 px-4 sm:px-6 lg:px-8" style="background: #0a0a0a;">
+                <div class="max-w-6xl mx-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 sm:gap-10 border-b border-white/10 pb-8 sm:pb-12 mb-6 sm:mb-8">
+                        <div class="footer-col md:col-span-2">
+                            <div class="font-serif text-2xl sm:text-3xl font-bold text-white flex items-center gap-2 mb-3 sm:mb-4">
+                                <span id="footer-emoji" class="text-3xl sm:text-4xl">☕</span>
+                                <span>Odoo Cafe</span>
+                            </div>
+                            <p class="text-white/75 text-xs sm:text-sm mb-4 sm:mb-6 max-w-sm">Premium cafe & food experience. Quality ingredients, expert preparation, and passion in every bite.</p>
+                            <div class="flex gap-2 sm:gap-3">
+                                <a href="#" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg hover:scale-110 hover:rotate-6 transition-all duration-300 min-w-[36px] min-h-[36px] footer-social" style="background: rgba(212, 165, 116, 0.2);">📘</a>
+                                <a href="#" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg hover:scale-110 hover:rotate-6 transition-all duration-300 min-w-[36px] min-h-[36px] footer-social">📸</a>
+                                <a href="#" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg hover:scale-110 hover:rotate-6 transition-all duration-300 min-w-[36px] min-h-[36px] footer-social">🐦</a>
+                                <a href="#" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg hover:scale-110 hover:rotate-6 transition-all duration-300 min-w-[36px] min-h-[36px] footer-social">📺</a>
+                            </div>
+                        </div>
+                        <div class="footer-col">
+                            <h4 class="font-bold mb-3 sm:mb-4 text-xs sm:text-sm tracking-widest" id="footer-hours-title">HOURS</h4>
+                            <ul class="space-y-2 sm:space-y-3 text-xs sm:text-sm text-white/75">
+                                <li>Mon - Fri: 7AM - 11PM</li>
+                                <li>Saturday: 8AM - 12AM</li>
+                                <li>Sunday: 8AM - 10PM</li>
+                            </ul>
+                        </div>
+                        <div class="footer-col">
+                            <h4 class="font-bold mb-3 sm:mb-4 text-xs sm:text-sm tracking-widest" id="footer-contact-title">CONTACT</h4>
+                            <ul class="space-y-2 sm:space-y-3 text-xs sm:text-sm text-white/75">
+                                <li class="flex items-center gap-2"><span>📍</span> 123 Cafe Street, Downtown</li>
+                                <li class="flex items-center gap-2"><span>📞</span> +1 (555) 123-4567</li>
+                                <li class="flex items-center gap-2"><span>✉️</span> hello@odoocafe.com</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4 text-center md:text-left">
+                        <p class="text-white/55 text-xs">© 2024 Odoo Cafe. All rights reserved.</p>
+                        <div class="flex flex-wrap gap-4 sm:gap-6 justify-center md:justify-end text-white/55 text-xs">
+                            <a href="#" class="hover:text-white/90 transition-colors">Privacy Policy</a>
+                            <a href="#" class="hover:text-white/90 transition-colors">Terms of Service</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="frontend/js/app.js"></script>
+</body>
+
+</html>
