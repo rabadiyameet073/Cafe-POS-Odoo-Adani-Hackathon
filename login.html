@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Odoo Cafe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="frontend/js/tailwind.config.js"></script>
+    <link href="frontend/css/login.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="relative min-h-screen bg-white overflow-hidden">
+        <div
+            class="fixed -top-40 -left-40 w-[520px] h-[520px] bg-[#FFDEE9] opacity-60 blur-[100px] rounded-full pointer-events-none">
+        </div>
+        <div
+            class="fixed bottom-[-220px] right-[-220px] w-[620px] h-[620px] bg-[#B5FFFC] opacity-60 blur-[120px] rounded-full pointer-events-none">
+        </div>
+
+        <div class="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
+            <div class="w-full max-w-md">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-slate-800">
+                        <span
+                            class="bg-gradient-to-r from-[#FFDEE9] to-[#B5FFFC] bg-clip-text text-transparent">Odoo</span>
+                        Cafe
+                    </h1>
+                    <p class="text-slate-500 mt-2">Restaurant POS System</p>
+                </div>
+
+                <div class="glass-card-static p-8">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">Welcome Back</h2>
+                    <p class="text-slate-500 mb-6">Sign in to continue</p>
+
+                    <form id="loginForm" class="space-y-4">
+                        <div class="relative">
+                            <svg class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            <input type="email" id="email" name="email" placeholder="Email address"
+                                class="input-field pl-12">
+                        </div>
+
+                        <div class="relative">
+                            <svg class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                                </path>
+                            </svg>
+                            <input type="password" id="password" name="password" placeholder="Password"
+                                class="input-field pl-12 pr-12">
+                            <button type="button" id="togglePassword"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                <svg id="eyeIcon" class="w-[18px] h-[18px]" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div id="errorBox"
+                            class="hidden p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"></div>
+
+                        <button type="submit" id="submitBtn"
+                            class="btn-primary w-full flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1">
+                                </path>
+                            </svg>
+                            <span>Sign In</span>
+                        </button>
+                    </form>
+
+                    <p class="text-center text-slate-500 text-sm mt-6">
+                        Don't have an account? <a href="signup.html"
+                            class="text-slate-800 font-medium hover:underline">Sign up</a>
+                    </p>
+
+                    <div class="mt-8 pt-6 border-t border-slate-100">
+                        <p class="text-xs text-slate-400 text-center mb-3">Demo Credentials (password: demo123)</p>
+                        <div id="demoCredentials" class="grid grid-cols-2 gap-2">
+                            <button type="button" data-email="customer@demo.com"
+                                class="demo-btn text-xs py-2 px-3 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-600 transition-all">Customer</button>
+                            <button type="button" data-email="cashier@demo.com"
+                                class="demo-btn text-xs py-2 px-3 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-600 transition-all">Cashier</button>
+                            <button type="button" data-email="kitchen@demo.com"
+                                class="demo-btn text-xs py-2 px-3 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-600 transition-all">Kitchen</button>
+                            <button type="button" data-email="admin@demo.com"
+                                class="demo-btn text-xs py-2 px-3 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-600 transition-all">Admin</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="frontend/js/constants.js"></script>
+    <script src="frontend/js/api.js"></script>
+    <script src="frontend/js/auth.js"></script>
+    <script src="frontend/js/components/toast.js"></script>
+    <script src="frontend/js/components/loading.js"></script>
+    <script src="frontend/js/login.js"></script>
+</body>
+
+</html>
