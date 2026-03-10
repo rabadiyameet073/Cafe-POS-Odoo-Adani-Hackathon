@@ -27,6 +27,7 @@ import { setupGlobalErrorHandler } from './utils/errorHandler'
 // Auth Pages
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import Landing from './pages/Landing'
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard'
@@ -69,7 +70,7 @@ function App() {
           <AuthProvider>
             <Toast />
             <Routes>
-              {/* ═══ Landing: Login Page ═══ */}
+              {/* ═══ Auth Pages ═══ */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
 
@@ -110,8 +111,8 @@ function App() {
               {/* ═══ Kitchen Routes ═══ (Protected) */}
               <Route path="/kitchen/display" element={<ProtectedRoute allowedRoles={['kitchen']}><KitchenDisplay /></ProtectedRoute>} />
 
-              {/* ═══ Default → Login Page ═══ */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
+              {/* ═══ Default → Landing Page ═══ */}
+              <Route path="/" element={<Landing />} />
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </AuthProvider>
