@@ -10,7 +10,7 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build:frontend": "npm run build --prefix frontend",
     "start:backend": "npm start --prefix backend",
-    "vercel-build": "cd frontend && npm install && npm run build && mv dist/index.html dist/app.html && cp ../index.html dist/index.html"
+    "vercel-build": "cd frontend && npm install && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

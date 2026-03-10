@@ -21,27 +21,27 @@
         },
         {
             "source": "/login",
-            "destination": "/app.html"
+            "destination": "/index.html"
         },
         {
             "source": "/signup",
-            "destination": "/app.html"
+            "destination": "/index.html"
         },
         {
             "source": "/admin/(.*)",
-            "destination": "/app.html"
+            "destination": "/index.html"
         },
         {
             "source": "/cashier/(.*)",
-            "destination": "/app.html"
+            "destination": "/index.html"
         },
         {
             "source": "/customer/(.*)",
-            "destination": "/app.html"
+            "destination": "/index.html"
         },
         {
             "source": "/kitchen/(.*)",
-            "destination": "/app.html"
+            "destination": "/index.html"
         }
     ],
     "headers": [
@@ -62,8 +62,5 @@
                 }
             ]
         }
-    ],
-    "env": {
-        "NODE_ENV": "production"
-    }
+    ]
 }
