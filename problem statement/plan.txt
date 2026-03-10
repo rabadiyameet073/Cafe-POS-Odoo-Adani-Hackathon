@@ -1,0 +1,2174 @@
+Odoo Cafe POS - Complete Project Plan & README
+📋 Table of Contents
+
+Project Overview
+System Architecture
+Technology Stack
+Database Schema
+Project Structure
+API Routes & Frontend Mapping
+Feature Implementation Plan
+Realtime Features
+Payment Integration
+Deployment Strategy
+
+
+🎯 Project Overview
+Odoo Cafe POS is a comprehensive Restaurant Point of Sale system with:
+
+Multi-role access (Customer, Cashier, Kitchen Staff, Admin)
+Table-based ordering with floor management
+Real-time kitchen display system
+Multiple payment methods (Cash, Net Banking, UPI QR)
+Customer order tracking
+Feedback system
+Comprehensive reporting dashboard
+
+User Flows
+Customer Flow:
+
+Login → View Available Tables (Floor-wise) → Select Table → Browse Menu → Add to Cart → Place Order → Select Payment Method → Pay → Track Order Status → Submit Feedback
+
+Cashier Flow:
+
+Login → Open POS Session → View All Customer Orders → Process Walk-in Orders → Manage Payments → View Dashboard → Close Session
+
+Kitchen Staff Flow:
+
+Login → View Kitchen Display → Update Order Status (To Cook → Preparing → Completed) → Mark Items Ready
+
+Admin Flow:
+
+Login → Configure Products → Manage Floors & Tables → Setup Payment Methods → View Reports → Export Data
+
+
+🏗️ System Architecture
+┌─────────────┐         ┌──────────────┐         ┌─────────────┐
+│   Client    │ ◄─────► │   Node.js    │ ◄─────► │  Supabase   │
+│  (React)    │         │   Backend    │         │ (PostgreSQL)│
+│             │         │              │         │             │
+│ - Customer  │         │ - REST API   │         │ - Database  │
+│ - Cashier   │         │ - Socket.IO  │         │ - Realtime  │
+│ - Kitchen   │         │ - Auth       │         │ - Storage   │
+│ - Admin     │         │              │         │             │
+└─────────────┘         └──────────────┘         └─────────────┘
+       │                       │
+       │                       │
+       └───────────────────────┘
+              Socket.IO
+         (Realtime Updates)
+
+🛠️ Technology Stack
+Frontend (Client)
+Core:
+- React.js 18+ (UI Framework)
+- Vite (Build Tool & Dev Server)
+- React Router DOM v6 (Routing)
+
+State Management:
+- React Context API (Global State)
+- useState, useReducer (Local State)
+
+Styling:
+- Tailwind CSS (Utility-first CSS)
+- Headless UI (Accessible Components)
+- Lucide React (Icons)
+
+HTTP & Realtime:
+- Axios (HTTP Client)
+- Socket.IO Client (Realtime Communication)
+- @supabase/supabase-js (Supabase Client)
+
+Utilities:
+- QRCode.react (QR Code Generation)
+- React-to-PDF (PDF Export)
+- XLSX (Excel Export)
+- date-fns (Date Formatting)
+- React-Hot-Toast (Notifications)
+- React-Confetti (Success Animations)
+
+Forms & Validation:
+- React Hook Form (Form Management)
+- Zod (Schema Validation)
+Backend (Server)
+Core:
+- Node.js 18+ (Runtime)
+- Express.js (Web Framework)
+
+Authentication:
+- jsonwebtoken (JWT Tokens)
+- bcryptjs (Password Hashing)
+
+Database:
+- @supabase/supabase-js (Supabase SDK)
+- PostgreSQL (via Supabase)
+
+Realtime:
+- Socket.IO (WebSocket Server)
+
+Utilities:
+- dotenv (Environment Variables)
+- cors (CORS Handling)
+- helmet (Security Headers)
+- express-validator (Input Validation)
+- morgan (HTTP Logger)
+
+File Generation:
+- qrcode (QR Code Generation)
+- pdfkit (PDF Generation)
+- exceljs (Excel Generation)
+Database & Hosting
+Database:
+- Supabase (PostgreSQL + Realtime)
+
+Deployment:
+- Vercel (Frontend & Backend)
+- Alternative for WebSockets: Railway/Render (if needed)
+
+Version Control:
+- Git
+- GitHub
+
+🗄️ Database Schema
+Table 1: users
+Purpose: Store all system users (customers, cashiers, kitchen staff, admin)
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEY, DEFAULT gen_random_uuid()Unique user identifieremailVARCHAR(255)UNIQUE, NOT NULLUser email (login)password_hashVARCHAR(255)NOT NULLHashed passwordfull_nameVARCHAR(255)NOT NULLUser's full namephoneVARCHAR(20)Contact numberroleVARCHAR(50)DEFAULT 'customer''customer', 'cashier', 'kitchen', 'admin'is_activeBOOLEANDEFAULT trueAccount statuscreated_atTIMESTAMPDEFAULT NOW()Account creation timeupdated_atTIMESTAMPDEFAULT NOW()Last update time
+Indexes: email, role
+
+Table 2: floors
+Purpose: Manage restaurant floors
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYFloor identifiernameVARCHAR(100)NOT NULLFloor name (e.g., "Ground Floor")descriptionTEXTFloor descriptiondisplay_orderINTEGERDEFAULT 0Display order in UIis_activeBOOLEANDEFAULT trueFloor statuscreated_byUUIDFOREIGN KEY → users(id)Who created this floorcreated_atTIMESTAMPDEFAULT NOW()Creation timeupdated_atTIMESTAMPDEFAULT NOW()Last update
+Indexes: is_active, display_order
+
+Table 3: tables
+Purpose: Restaurant tables on each floor
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYTable identifierfloor_idUUIDFOREIGN KEY → floors(id) ON DELETE CASCADEWhich floortable_numberVARCHAR(50)NOT NULLTable number/nameseatsINTEGERNOT NULLSeating capacitystatusVARCHAR(50)DEFAULT 'available''available', 'occupied', 'reserved'is_activeBOOLEANDEFAULT trueTable active statusqr_code_tokenVARCHAR(100)UNIQUEFor self-orderingappointment_resourceVARCHAR(100)Optional booking resourcecreated_atTIMESTAMPDEFAULT NOW()Creation timeupdated_atTIMESTAMPDEFAULT NOW()Last update
+Indexes: floor_id, status, qr_code_token
+Unique Constraint: (floor_id, table_number)
+
+Table 4: product_categories
+Purpose: Product classification
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYCategory identifiernameVARCHAR(100)UNIQUE, NOT NULLCategory namedescriptionTEXTCategory descriptionsend_to_kitchenBOOLEANDEFAULT trueShould orders go to kitchendisplay_orderINTEGERDEFAULT 0Display orderis_activeBOOLEANDEFAULT trueCategory statuscreated_atTIMESTAMPDEFAULT NOW()Creation time
+Indexes: is_active, send_to_kitchen
+
+Table 5: products
+Purpose: Menu items/products
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYProduct identifiernameVARCHAR(255)NOT NULLProduct namecategory_idUUIDFOREIGN KEY → product_categories(id)Product categorypriceDECIMAL(10,2)NOT NULLBase priceunitVARCHAR(50)DEFAULT 'piece''piece', 'kg', 'liter', 'plate'tax_percentageDECIMAL(5,2)DEFAULT 0Tax % (e.g., 5.00 for 5%)descriptionTEXTProduct descriptionimage_urlTEXTProduct image URLis_availableBOOLEANDEFAULT trueCurrently availableis_activeBOOLEANDEFAULT trueProduct active statuscreated_atTIMESTAMPDEFAULT NOW()Creation timeupdated_atTIMESTAMPDEFAULT NOW()Last update
+Indexes: category_id, is_available, is_active
+
+Table 6: product_variants
+Purpose: Product variations (size, pack, etc.)
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYVariant identifierproduct_idUUIDFOREIGN KEY → products(id) ON DELETE CASCADEParent productattribute_nameVARCHAR(100)NOT NULLAttribute (e.g., "Pack", "Size")attribute_valueVARCHAR(100)NOT NULLValue (e.g., "6 items", "Large")extra_priceDECIMAL(10,2)DEFAULT 0Additional priceis_activeBOOLEANDEFAULT trueVariant statuscreated_atTIMESTAMPDEFAULT NOW()Creation time
+Indexes: product_id, is_active
+
+Table 7: payment_methods
+Purpose: Available payment options
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYPayment method IDnameVARCHAR(50)UNIQUE, NOT NULL'cash', 'netbanking', 'upi_qr', 'card'display_nameVARCHAR(100)NOT NULLDisplay name in UIis_enabledBOOLEANDEFAULT trueCurrently enabledupi_idVARCHAR(100)UPI ID for QR generationconfigJSONBAdditional configurationcreated_atTIMESTAMPDEFAULT NOW()Creation timeupdated_atTIMESTAMPDEFAULT NOW()Last update
+Indexes: is_enabled
+
+Table 8: pos_sessions
+Purpose: Track cashier sessions
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYSession identifiersession_numberVARCHAR(50)UNIQUE, NOT NULLAuto-generated session#user_idUUIDFOREIGN KEY → users(id)Cashier who openedopening_balanceDECIMAL(10,2)DEFAULT 0Cash at session startclosing_balanceDECIMAL(10,2)Cash at session endstatusVARCHAR(50)DEFAULT 'open''open', 'closed'opened_atTIMESTAMPDEFAULT NOW()Session open timeclosed_atTIMESTAMPSession close timenotesTEXTSession notescreated_atTIMESTAMPDEFAULT NOW()Creation time
+Indexes: user_id, status, opened_at
+
+Table 9: orders
+Purpose: Customer orders
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYOrder identifierorder_numberVARCHAR(50)UNIQUE, NOT NULLAuto-generated order#session_idUUIDFOREIGN KEY → pos_sessions(id)POS sessiontable_idUUIDFOREIGN KEY → tables(id)Which tablecustomer_idUUIDFOREIGN KEY → users(id)Customer who orderedcashier_idUUIDFOREIGN KEY → users(id)Cashier (if walk-in)subtotalDECIMAL(10,2)NOT NULL DEFAULT 0Before taxtax_amountDECIMAL(10,2)NOT NULL DEFAULT 0Total taxdiscount_amountDECIMAL(10,2)DEFAULT 0Discount appliedtotal_amountDECIMAL(10,2)NOT NULL DEFAULT 0Final amountstatusVARCHAR(50)DEFAULT 'draft''draft', 'confirmed', 'sent_to_kitchen', 'preparing', 'ready', 'completed', 'cancelled'order_typeVARCHAR(50)DEFAULT 'dine_in''dine_in', 'takeaway', 'self_order'self_order_tokenVARCHAR(100)For self-orderingspecial_instructionsTEXTCustomer notessent_to_kitchen_atTIMESTAMPWhen sent to kitchenready_atTIMESTAMPWhen order readycompleted_atTIMESTAMPWhen completedcancelled_atTIMESTAMPIf cancelledcreated_atTIMESTAMPDEFAULT NOW()Order creationupdated_atTIMESTAMPDEFAULT NOW()Last update
+Indexes: order_number, session_id, table_id, customer_id, status, created_at
+
+Table 10: order_items
+Purpose: Individual items in an order
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYOrder item identifierorder_idUUIDFOREIGN KEY → orders(id) ON DELETE CASCADEParent orderproduct_idUUIDFOREIGN KEY → products(id)Product orderedvariant_idUUIDFOREIGN KEY → product_variants(id)Product variantquantityINTEGERNOT NULL DEFAULT 1Quantity orderedunit_priceDECIMAL(10,2)NOT NULLProduct price at timevariant_priceDECIMAL(10,2)DEFAULT 0Variant extra pricetax_percentageDECIMAL(5,2)DEFAULT 0Tax % at timeline_totalDECIMAL(10,2)NOT NULLItem total (qty × price)kitchen_statusVARCHAR(50)DEFAULT 'pending''pending', 'preparing', 'completed'notesTEXTItem-specific notescreated_atTIMESTAMPDEFAULT NOW()Creation timeupdated_atTIMESTAMPDEFAULT NOW()Last update
+Indexes: order_id, product_id, kitchen_status
+
+Table 11: payments
+Purpose: Payment transactions
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYPayment identifierorder_idUUIDFOREIGN KEY → orders(id) ON DELETE CASCADEOrder being paidsession_idUUIDFOREIGN KEY → pos_sessions(id)POS sessionpayment_method_idUUIDFOREIGN KEY → payment_methods(id)Payment method usedamountDECIMAL(10,2)NOT NULLPayment amountstatusVARCHAR(50)DEFAULT 'pending''pending', 'completed', 'failed', 'refunded'transaction_idVARCHAR(100)External transaction IDreference_numberVARCHAR(100)Payment referencenotesTEXTPayment notespaid_atTIMESTAMPPayment completion timecreated_atTIMESTAMPDEFAULT NOW()Creation time
+Indexes: order_id, session_id, payment_method_id, status
+
+Table 12: kitchen_orders
+Purpose: Kitchen display management
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYKitchen order IDorder_idUUIDFOREIGN KEY → orders(id) ON DELETE CASCADEOriginal orderticket_numberVARCHAR(50)NOT NULLDisplay ticket# (same as order#)table_numberVARCHAR(50)Table for this orderstageVARCHAR(50)DEFAULT 'to_cook''to_cook', 'preparing', 'completed'itemsJSONBNOT NULLArray of items with statuspriorityINTEGERDEFAULT 0Order priorityreceived_atTIMESTAMPDEFAULT NOW()When receivedstarted_atTIMESTAMPWhen started preparingcompleted_atTIMESTAMPWhen completedupdated_atTIMESTAMPDEFAULT NOW()Last update
+Indexes: stage, received_at, order_id
+
+Table 13: feedback
+Purpose: Customer feedback and reviews
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYFeedback identifierorder_idUUIDFOREIGN KEY → orders(id)Order being reviewedcustomer_idUUIDFOREIGN KEY → users(id)Who gave feedbackoverall_ratingINTEGERCHECK (1-5)Overall rating 1-5food_quality_ratingINTEGERCHECK (1-5)Food quality 1-5service_ratingINTEGERCHECK (1-5)Service rating 1-5payment_experience_ratingINTEGERCHECK (1-5)Payment ease 1-5payment_method_usedVARCHAR(50)Which payment methodpayment_seamlessBOOLEANWas payment smoothambience_ratingINTEGERCHECK (1-5)Ambience 1-5cleanliness_ratingINTEGERCHECK (1-5)Cleanliness 1-5liked_itemsTEXT[]Items customer likeddisliked_itemsTEXT[]Items customer didn't likefavorite_dishVARCHAR(255)Best dishsuggestionsTEXTImprovement suggestionswould_recommendBOOLEANWould recommendcommentsTEXTAdditional commentsis_anonymousBOOLEANDEFAULT falseAnonymous feedbackcreated_atTIMESTAMPDEFAULT NOW()Feedback time
+Indexes: order_id, customer_id, overall_rating, created_at
+
+Table 14: self_order_tokens
+Purpose: Manage self-ordering tokens
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYToken identifiertokenVARCHAR(100)UNIQUE, NOT NULLUnique token stringtable_idUUIDFOREIGN KEY → tables(id)Associated tablesession_idUUIDFOREIGN KEY → pos_sessions(id)Active sessionis_activeBOOLEANDEFAULT trueToken active statusexpires_atTIMESTAMPToken expirycreated_atTIMESTAMPDEFAULT NOW()Creation time
+Indexes: token, table_id, is_active
+
+Table 15: reports_cache
+Purpose: Cache report data for performance
+Column NameData TypeConstraintsDescriptionidUUIDPRIMARY KEYCache identifierreport_typeVARCHAR(50)NOT NULL'daily_sales', 'product_sales', etc.filtersJSONBApplied filtersdataJSONBCached report datagenerated_atTIMESTAMPDEFAULT NOW()Cache generation timeexpires_atTIMESTAMPCache expiry
+Indexes: report_type, generated_at
+
+📁 Project Structure
+odoo-cafe-pos/
+│
+├── README.md (this file)
+├── .gitignore
+├── package.json (root workspace config)
+│
+├── client/ (React Frontend)
+│   ├── public/
+│   │   ├── index.html
+│   │   ├── favicon.ico
+│   │   └── logo.png
+│   │
+│   ├── src/
+│   │   ├── main.jsx (Entry point)
+│   │   ├── App.jsx (Main app component)
+│   │   │
+│   │   ├── routes/
+│   │   │   └── AppRoutes.jsx (All route definitions)
+│   │   │
+│   │   ├── layouts/
+│   │   │   ├── AuthLayout.jsx (Login/Signup pages)
+│   │   │   ├── CustomerLayout.jsx (Customer interface)
+│   │   │   ├── CashierLayout.jsx (Cashier POS interface)
+│   │   │   ├── KitchenLayout.jsx (Kitchen display)
+│   │   │   └── AdminLayout.jsx (Backend config)
+│   │   │
+│   │   ├── pages/
+│   │   │   ├── auth/
+│   │   │   │   ├── LoginPage.jsx
+│   │   │   │   └── SignupPage.jsx
+│   │   │   │
+│   │   │   ├── customer/
+│   │   │   │   ├── FloorSelectionPage.jsx (View floors & tables)
+│   │   │   │   ├── MenuPage.jsx (Browse menu & add to cart)
+│   │   │   │   ├── CartPage.jsx (Review cart)
+│   │   │   │   ├── PaymentPage.jsx (Select payment method)
+│   │   │   │   ├── OrderTrackingPage.jsx (Track order status)
+│   │   │   │   └── FeedbackPage.jsx (Submit feedback)
+│   │   │   │
+│   │   │   ├── cashier/
+│   │   │   │   ├── POSDashboard.jsx (Main POS screen)
+│   │   │   │   ├── SessionManagementPage.jsx (Open/close session)
+│   │   │   │   ├── FloorViewPage.jsx (Table view)
+│   │   │   │   ├── OrderCreationPage.jsx (Create order)
+│   │   │   │   ├── AllOrdersPage.jsx (View all customer orders)
+│   │   │   │   ├── PaymentProcessingPage.jsx (Process payments)
+│   │   │   │   └── RegisterPage.jsx (Cash register)
+│   │   │   │
+│   │   │   ├── kitchen/
+│   │   │   │   └── KitchenDisplayPage.jsx (Kitchen order board)
+│   │   │   │
+│   │   │   └── admin/
+│   │   │       ├── DashboardPage.jsx (Overview)
+│   │   │       ├── ProductManagementPage.jsx (CRUD products)
+│   │   │       ├── FloorManagementPage.jsx (CRUD floors)
+│   │   │       ├── TableManagementPage.jsx (CRUD tables)
+│   │   │       ├── PaymentMethodsPage.jsx (Configure payments)
+│   │   │       ├── ReportsPage.jsx (View reports)
+│   │   │       └── SettingsPage.jsx (System settings)
+│   │   │
+│   │   ├── components/
+│   │   │   ├── common/
+│   │   │   │   ├── Navbar.jsx
+│   │   │   │   ├── Sidebar.jsx
+│   │   │   │   ├── Button.jsx
+│   │   │   │   ├── Card.jsx
+│   │   │   │   ├── Modal.jsx
+│   │   │   │   ├── LoadingSpinner.jsx
+│   │   │   │   ├── Toast.jsx
+│   │   │   │   └── ConfirmDialog.jsx
+│   │   │   │
+│   │   │   ├── auth/
+│   │   │   │   ├── LoginForm.jsx
+│   │   │   │   ├── SignupForm.jsx
+│   │   │   │   └── ProtectedRoute.jsx
+│   │   │   │
+│   │   │   ├── customer/
+│   │   │   │   ├── FloorCard.jsx
+│   │   │   │   ├── TableCard.jsx
+│   │   │   │   ├── ProductCard.jsx
+│   │   │   │   ├── CartItem.jsx
+│   │   │   │   ├── OrderSummary.jsx
+│   │   │   │   ├── PaymentMethodSelector.jsx
+│   │   │   │   ├── QRCodeDisplay.jsx
+│   │   │   │   ├── OrderStatusTracker.jsx
+│   │   │   │   └── FeedbackForm.jsx
+│   │   │   │
+│   │   │   ├── cashier/
+│   │   │   │   ├── POSTopMenu.jsx
+│   │   │   │   ├── SessionCard.jsx
+│   │   │   │   ├── TableGrid.jsx
+│   │   │   │   ├── ProductGrid.jsx
+│   │   │   │   ├── OrderCart.jsx
+│   │   │   │   ├── PaymentPanel.jsx
+│   │   │   │   ├── OrderListItem.jsx
+│   │   │   │   └── CustomerOrderCard.jsx
+│   │   │   │
+│   │   │   ├── kitchen/
+│   │   │   │   ├── OrderTicket.jsx
+│   │   │   │   ├── OrderItemRow.jsx
+│   │   │   │   └── StageColumn.jsx
+│   │   │   │
+│   │   │   └── admin/
+│   │   │       ├── ProductForm.jsx
+│   │   │       ├── ProductTable.jsx
+│   │   │       ├── FloorForm.jsx
+│   │   │       ├── TableForm.jsx
+│   │   │       ├── PaymentMethodForm.jsx
+│   │   │       ├── ReportFilters.jsx
+│   │   │       ├── SalesChart.jsx
+│   │   │       └── ExportButtons.jsx
+│   │   │
+│   │   ├── context/
+│   │   │   ├── AuthContext.jsx (User authentication state)
+│   │   │   ├── CartContext.jsx (Shopping cart state)
+│   │   │   ├── OrderContext.jsx (Current order state)
+│   │   │   ├── SocketContext.jsx (WebSocket connection)
+│   │   │   └── POSContext.jsx (POS session state)
+│   │   │
+│   │   ├── hooks/
+│   │   │   ├── useAuth.js
+│   │   │   ├── useCart.js
+│   │   │   ├── useSocket.js
+│   │   │   ├── useRealtime.js
+│   │   │   ├── useLocalStorage.js
+│   │   │   └── useDebounce.js
+│   │   │
+│   │   ├── services/
+│   │   │   ├── api.js (Axios instance & interceptors)
+│   │   │   ├── supabase.js (Supabase client)
+│   │   │   ├── authService.js (Login, signup, logout)
+│   │   │   ├── productService.js (Product CRUD)
+│   │   │   ├── orderService.js (Order operations)
+│   │   │   ├── paymentService.js (Payment processing)
+│   │   │   ├── tableService.js (Table operations)
+│   │   │   ├── floorService.js (Floor operations)
+│   │   │   ├── feedbackService.js (Feedback operations)
+│   │   │   ├── reportService.js (Reports & analytics)
+│   │   │   └── kitchenService.js (Kitchen operations)
+│   │   │
+│   │   ├── utils/
+│   │   │   ├── constants.js (App constants)
+│   │   │   ├── helpers.js (Utility functions)
+│   │   │   ├── validators.js (Form validation)
+│   │   │   ├── formatters.js (Data formatting)
+│   │   │   ├── qrGenerator.js (QR code generation)
+│   │   │   └── exportUtils.js (PDF/Excel export)
+│   │   │
+│   │   └── styles/
+│   │       ├── index.css (Global styles)
+│   │       └── tailwind.css (Tailwind imports)
+│   │
+│   ├── .env.example
+│   ├── .env.local
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   └── vercel.json
+│
+├── server/ (Node.js Backend)
+│   ├── src/
+│   │   ├── server.js (Entry point)
+│   │   ├── app.js (Express app setup)
+│   │   │
+│   │   ├── config/
+│   │   │   ├── database.js (DB connection)
+│   │   │   ├── supabase.js (Supabase config)
+│   │   │   └── env.js (Environment variables)
+│   │   │
+│   │   ├── routes/
+│   │   │   ├── index.js (Route aggregator)
+│   │   │   ├── auth.routes.js (POST /login, /signup, /logout)
+│   │   │   ├── user.routes.js (GET /users, GET /users/:id)
+│   │   │   ├── product.routes.js (CRUD /products)
+│   │   │   ├── category.routes.js (CRUD /categories)
+│   │   │   ├── floor.routes.js (CRUD /floors)
+│   │   │   ├── table.routes.js (CRUD /tables)
+│   │   │   ├── order.routes.js (CRUD /orders)
+│   │   │   ├── payment.routes.js (POST /payments)
+│   │   │   ├── session.routes.js (CRUD /sessions)
+│   │   │   ├── kitchen.routes.js (GET /kitchen/orders, PATCH)
+│   │   │   ├── feedback.routes.js (POST /feedback)
+│   │   │   └── report.routes.js (GET /reports)
+│   │   │
+│   │   ├── controllers/
+│   │   │   ├── authController.js
+│   │   │   ├── userController.js
+│   │   │   ├── productController.js
+│   │   │   ├── categoryController.js
+│   │   │   ├── floorController.js
+│   │   │   ├── tableController.js
+│   │   │   ├── orderController.js
+│   │   │   ├── paymentController.js
+│   │   │   ├── sessionController.js
+│   │   │   ├── kitchenController.js
+│   │   │   ├── feedbackController.js
+│   │   │   └── reportController.js
+│   │   │
+│   │   ├── models/
+│   │   │   ├── User.js
+│   │   │   ├── Product.js
+│   │   │   ├── Category.js
+│   │   │   ├── Floor.js
+│   │   │   ├── Table.js
+│   │   │   ├── Order.js
+│   │   │   ├── OrderItem.js
+│   │   │   ├── Payment.js
+│   │   │   ├── Session.js
+│   │   │   ├── KitchenOrder.js
+│   │   │   └── Feedback.js
+│   │   │
+│   │   ├── middleware/Continue11:01 AM│   │   │   ├── auth.middleware.js (Verify JWT)
+│   │   │   ├── roleCheck.middleware.js (Check user role)
+│   │   │   ├── validation.middleware.js (Validate requests)
+│   │   │   ├── error.middleware.js (Error handler)
+│   │   │   └── logger.middleware.js (Request logger)
+│   │   │
+│   │   ├── services/
+│   │   │   ├── tokenService.js (JWT generation)
+│   │   │   ├── qrService.js (QR code generation)
+│   │   │   ├── pdfService.js (PDF generation)
+│   │   │   ├── excelService.js (Excel generation)
+│   │   │   └── emailService.js (Email notifications)
+│   │   │
+│   │   ├── sockets/
+│   │   │   ├── index.js (Socket.IO setup)
+│   │   │   ├── orderSocket.js (Order realtime events)
+│   │   │   ├── kitchenSocket.js (Kitchen realtime events)
+│   │   │   ├── tableSocket.js (Table status updates)
+│   │   │   └── customerSocket.js (Customer display updates)
+│   │   │
+│   │   ├── utils/
+│   │   │   ├── logger.js (Winston logger)
+│   │   │   ├── validators.js (Data validation)
+│   │   │   ├── helpers.js (Helper functions)
+│   │   │   └── errorHandler.js (Custom error classes)
+│   │   │
+│   │   └── validators/
+│   │       ├── authValidator.js
+│   │       ├── productValidator.js
+│   │       ├── orderValidator.js
+│   │       └── paymentValidator.js
+│   │
+│   ├── .env.example
+│   ├── .env
+│   ├── package.json
+│   └── vercel.json
+│
+└── database/
+├── schema.sql (All CREATE TABLE statements)
+├── seed.sql (Sample data)
+├── migrations/
+│   ├── 001_create_users_table.sql
+│   ├── 002_create_floors_tables.sql
+│   ├── 003_create_products_categories.sql
+│   ├── 004_create_orders_tables.sql
+│   └── 005_create_feedback_table.sql
+└── README.md (DB setup instructions)
+
+---
+
+## 🔌 API Routes & Frontend Mapping
+
+### **Authentication Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/auth/signup` | POST | authController.signup | authService.signup() | SignupPage.jsx |
+| `/api/auth/login` | POST | authController.login | authService.login() | LoginPage.jsx |
+| `/api/auth/logout` | POST | authController.logout | authService.logout() | Navbar.jsx |
+| `/api/auth/me` | GET | authController.getCurrentUser | authService.getCurrentUser() | ProtectedRoute.jsx |
+
+**Database Tables Used:** `users`
+
+---
+
+### **User Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/users` | GET | userController.getAllUsers | userService.getAllUsers() | AdminDashboard.jsx |
+| `/api/users/:id` | GET | userController.getUserById | userService.getUserById() | UserProfile.jsx |
+| `/api/users/:id` | PATCH | userController.updateUser | userService.updateUser() | UserEditForm.jsx |
+
+**Database Tables Used:** `users`
+
+---
+
+### **Floor Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/floors` | GET | floorController.getAllFloors | floorService.getAllFloors() | FloorSelectionPage.jsx |
+| `/api/floors` | POST | floorController.createFloor | floorService.createFloor() | FloorManagementPage.jsx |
+| `/api/floors/:id` | GET | floorController.getFloorById | floorService.getFloorById() | FloorDetailsPage.jsx |
+| `/api/floors/:id` | PUT | floorController.updateFloor | floorService.updateFloor() | FloorForm.jsx |
+| `/api/floors/:id` | DELETE | floorController.deleteFloor | floorService.deleteFloor() | FloorManagementPage.jsx |
+
+**Database Tables Used:** `floors`
+
+---
+
+### **Table Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/tables` | GET | tableController.getAllTables | tableService.getAllTables() | TableManagementPage.jsx |
+| `/api/tables/floor/:floorId` | GET | tableController.getTablesByFloor | tableService.getTablesByFloor() | FloorSelectionPage.jsx |
+| `/api/tables/available` | GET | tableController.getAvailableTables | tableService.getAvailableTables() | FloorSelectionPage.jsx |
+| `/api/tables` | POST | tableController.createTable | tableService.createTable() | TableManagementPage.jsx |
+| `/api/tables/:id` | PUT | tableController.updateTable | tableService.updateTable() | TableForm.jsx |
+| `/api/tables/:id/status` | PATCH | tableController.updateTableStatus | tableService.updateTableStatus() | FloorViewPage.jsx |
+| `/api/tables/:id` | DELETE | tableController.deleteTable | tableService.deleteTable() | TableManagementPage.jsx |
+
+**Database Tables Used:** `tables`, `floors`
+
+---
+
+### **Product Category Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/categories` | GET | categoryController.getAllCategories | categoryService.getAllCategories() | MenuPage.jsx |
+| `/api/categories` | POST | categoryController.createCategory | categoryService.createCategory() | ProductManagementPage.jsx |
+| `/api/categories/:id` | PUT | categoryController.updateCategory | categoryService.updateCategory() | CategoryForm.jsx |
+| `/api/categories/:id` | DELETE | categoryController.deleteCategory | categoryService.deleteCategory() | ProductManagementPage.jsx |
+
+**Database Tables Used:** `product_categories`
+
+---
+
+### **Product Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/products` | GET | productController.getAllProducts | productService.getAllProducts() | MenuPage.jsx |
+| `/api/products/category/:categoryId` | GET | productController.getProductsByCategory | productService.getProductsByCategory() | MenuPage.jsx |
+| `/api/products/:id` | GET | productController.getProductById | productService.getProductById() | ProductCard.jsx |
+| `/api/products` | POST | productController.createProduct | productService.createProduct() | ProductManagementPage.jsx |
+| `/api/products/:id` | PUT | productController.updateProduct | productService.updateProduct() | ProductForm.jsx |
+| `/api/products/:id` | DELETE | productController.deleteProduct | productService.deleteProduct() | ProductManagementPage.jsx |
+| `/api/products/:id/variants` | GET | productController.getProductVariants | productService.getProductVariants() | ProductCard.jsx |
+| `/api/products/:id/variants` | POST | productController.createVariant | productService.createVariant() | ProductForm.jsx |
+
+**Database Tables Used:** `products`, `product_categories`, `product_variants`
+
+---
+
+### **Payment Method Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/payment-methods` | GET | paymentController.getAllPaymentMethods | paymentService.getPaymentMethods() | PaymentPage.jsx |
+| `/api/payment-methods/enabled` | GET | paymentController.getEnabledMethods | paymentService.getEnabledMethods() | PaymentPage.jsx |
+| `/api/payment-methods` | POST | paymentController.createPaymentMethod | paymentService.createPaymentMethod() | PaymentMethodsPage.jsx |
+| `/api/payment-methods/:id` | PUT | paymentController.updatePaymentMethod | paymentService.updatePaymentMethod() | PaymentMethodForm.jsx |
+| `/api/payment-methods/:id/toggle` | PATCH | paymentController.togglePaymentMethod | paymentService.togglePaymentMethod() | PaymentMethodsPage.jsx |
+
+**Database Tables Used:** `payment_methods`
+
+---
+
+### **Session Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/sessions` | GET | sessionController.getAllSessions | sessionService.getAllSessions() | SessionManagementPage.jsx |
+| `/api/sessions/active` | GET | sessionController.getActiveSession | sessionService.getActiveSession() | POSDashboard.jsx |
+| `/api/sessions/open` | POST | sessionController.openSession | sessionService.openSession() | SessionManagementPage.jsx |
+| `/api/sessions/:id/close` | POST | sessionController.closeSession | sessionService.closeSession() | POSTopMenu.jsx |
+| `/api/sessions/:id` | GET | sessionController.getSessionById | sessionService.getSessionById() | RegisterPage.jsx |
+
+**Database Tables Used:** `pos_sessions`, `users`
+
+---
+
+### **Order Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/orders` | GET | orderController.getAllOrders | orderService.getAllOrders() | AllOrdersPage.jsx |
+| `/api/orders/customer/:customerId` | GET | orderController.getCustomerOrders | orderService.getCustomerOrders() | OrderTrackingPage.jsx |
+| `/api/orders/session/:sessionId` | GET | orderController.getSessionOrders | orderService.getSessionOrders() | POSDashboard.jsx |
+| `/api/orders/:id` | GET | orderController.getOrderById | orderService.getOrderById() | OrderDetailsPage.jsx |
+| `/api/orders` | POST | orderController.createOrder | orderService.createOrder() | MenuPage.jsx, CartPage.jsx |
+| `/api/orders/:id` | PUT | orderController.updateOrder | orderService.updateOrder() | OrderCreationPage.jsx |
+| `/api/orders/:id/items` | POST | orderController.addOrderItem | orderService.addOrderItem() | OrderCreationPage.jsx |
+| `/api/orders/:id/items/:itemId` | DELETE | orderController.removeOrderItem | orderService.removeOrderItem() | Cart.jsx |
+| `/api/orders/:id/send-to-kitchen` | POST | orderController.sendToKitchen | orderService.sendToKitchen() | OrderCreationPage.jsx |
+| `/api/orders/:id/status` | PATCH | orderController.updateOrderStatus | orderService.updateOrderStatus() | KitchenDisplayPage.jsx |
+| `/api/orders/:id/cancel` | POST | orderController.cancelOrder | orderService.cancelOrder() | OrderTrackingPage.jsx |
+
+**Database Tables Used:** `orders`, `order_items`, `products`, `tables`, `users`, `pos_sessions`
+
+---
+
+### **Payment Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/payments` | POST | paymentController.processPayment | paymentService.processPayment() | PaymentPage.jsx |
+| `/api/payments/:id` | GET | paymentController.getPaymentById | paymentService.getPaymentById() | PaymentConfirmation.jsx |
+| `/api/payments/order/:orderId` | GET | paymentController.getOrderPayments | paymentService.getOrderPayments() | OrderDetailsPage.jsx |
+| `/api/payments/:id/verify` | POST | paymentController.verifyPayment | paymentService.verifyPayment() | PaymentPage.jsx |
+| `/api/payments/qr/generate` | POST | paymentController.generateQRCode | paymentService.generateQRCode() | QRCodeDisplay.jsx |
+
+**Database Tables Used:** `payments`, `orders`, `payment_methods`, `pos_sessions`
+
+---
+
+### **Kitchen Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/kitchen/orders` | GET | kitchenController.getKitchenOrders | kitchenService.getKitchenOrders() | KitchenDisplayPage.jsx |
+| `/api/kitchen/orders/:id/stage` | PATCH | kitchenController.updateOrderStage | kitchenService.updateOrderStage() | OrderTicket.jsx |
+| `/api/kitchen/orders/:id/items/:itemId` | PATCH | kitchenController.markItemPrepared | kitchenService.markItemPrepared() | OrderItemRow.jsx |
+
+**Database Tables Used:** `kitchen_orders`, `orders`, `order_items`
+
+---
+
+### **Feedback Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/feedback` | POST | feedbackController.submitFeedback | feedbackService.submitFeedback() | FeedbackPage.jsx |
+| `/api/feedback/order/:orderId` | GET | feedbackController.getOrderFeedback | feedbackService.getOrderFeedback() | OrderDetailsPage.jsx |
+| `/api/feedback` | GET | feedbackController.getAllFeedback | feedbackService.getAllFeedback() | AdminDashboard.jsx |
+| `/api/feedback/stats` | GET | feedbackController.getFeedbackStats | feedbackService.getFeedbackStats() | ReportsPage.jsx |
+
+**Database Tables Used:** `feedback`, `orders`, `users`
+
+---
+
+### **Report Routes**
+
+| Backend Route | Method | Controller Function | Frontend Service | Frontend Component/Page |
+|--------------|--------|---------------------|------------------|------------------------|
+| `/api/reports/sales` | GET | reportController.getSalesReport | reportService.getSalesReport() | ReportsPage.jsx |
+| `/api/reports/products` | GET | reportController.getProductReport | reportService.getProductReport() | ReportsPage.jsx |
+| `/api/reports/sessions` | GET | reportController.getSessionReport | reportService.getSessionReport() | ReportsPage.jsx |
+| `/api/reports/feedback` | GET | reportController.getFeedbackReport | reportService.getFeedbackReport() | ReportsPage.jsx |
+| `/api/reports/export/pdf` | POST | reportController.exportPDF | reportService.exportPDF() | ExportButtons.jsx |
+| `/api/reports/export/excel` | POST | reportController.exportExcel | reportService.exportExcel() | ExportButtons.jsx |
+
+**Database Tables Used:** `orders`, `order_items`, `payments`, `products`, `pos_sessions`, `feedback`
+
+---
+
+## 🎨 Feature Implementation Plan
+
+### **1. Authentication System**
+
+**Pseudocode - Backend (authController.js)**
+FUNCTION signup(request, response):
+GET email, password, full_name, phone, role FROM request.body
+IF user with email EXISTS in users table:
+    RETURN error "User already exists"
+
+hashed_password = HASH password using bcrypt
+
+new_user = INSERT INTO users (email, password_hash, full_name, phone, role)
+
+jwt_token = GENERATE JWT with payload {user_id, email, role}
+
+RETURN response with {user_data, token}
+FUNCTION login(request, response):
+GET email, password FROM request.body
+user = SELECT FROM users WHERE email = email AND is_active = true
+
+IF user NOT FOUND:
+    RETURN error "Invalid credentials"
+
+is_valid = COMPARE password with user.password_hash using bcrypt
+
+IF NOT is_valid:
+    RETURN error "Invalid credentials"
+
+jwt_token = GENERATE JWT with payload {user_id, email, role}
+
+RETURN response with {user_data, token}
+
+**Pseudocode - Frontend (authService.js)**
+FUNCTION signup(userData):
+response = POST request to "/api/auth/signup" with userData
+IF response successful:
+    STORE token in localStorage
+    SET user in AuthContext
+    REDIRECT to appropriate dashboard based on role
+ELSE:
+    SHOW error toast
+FUNCTION login(credentials):
+response = POST request to "/api/auth/login" with credentials
+IF response successful:
+    STORE token in localStorage
+    SET user in AuthContext
+    
+    IF role is "customer":
+        REDIRECT to "/customer/floors"
+    ELSE IF role is "cashier":
+        REDIRECT to "/cashier/dashboard"
+    ELSE IF role is "kitchen":
+        REDIRECT to "/kitchen/display"
+    ELSE IF role is "admin":
+        REDIRECT to "/admin/dashboard"
+ELSE:
+    SHOW error toast
+
+---
+
+### **2. Customer Floor & Table Selection**
+
+**Pseudocode - Backend (floorController.js, tableController.js)**
+FUNCTION getAllFloors(request, response):
+floors = SELECT * FROM floors WHERE is_active = true ORDER BY display_order
+FOR EACH floor IN floors:
+    floor.tables_count = COUNT tables WHERE floor_id = floor.id AND is_active = true
+
+RETURN response with floors
+FUNCTION getTablesByFloor(request, response):
+floor_id = GET from request.params
+tables = SELECT * FROM tables 
+         WHERE floor_id = floor_id 
+         AND is_active = true 
+         ORDER BY table_number
+
+FOR EACH table IN tables:
+    // Check if table has active order
+    active_order = SELECT FROM orders 
+                   WHERE table_id = table.id 
+                   AND status NOT IN ('completed', 'cancelled')
+    
+    IF active_order EXISTS:
+        table.status = "occupied"
+    ELSE:
+        table.status = "available"
+
+RETURN response with tables
+
+**Pseudocode - Frontend (FloorSelectionPage.jsx)**
+COMPONENT FloorSelectionPage:
+STATE floors = []
+STATE selectedFloor = null
+STATE tables = []
+STATE loading = true
+ON COMPONENT MOUNT:
+    fetchFloors()
+
+FUNCTION fetchFloors():
+    SET loading = true
+    floors_data = AWAIT floorService.getAllFloors()
+    SET floors = floors_data
+    SET loading = false
+
+FUNCTION selectFloor(floor):
+    SET selectedFloor = floor
+    fetchTablesForFloor(floor.id)
+
+FUNCTION fetchTablesForFloor(floorId):
+    tables_data = AWAIT tableService.getTablesByFloor(floorId)
+    SET tables = tables_data
+
+FUNCTION selectTable(table):
+    IF table.status is "available":
+        // Create draft order and navigate to menu
+        order = AWAIT orderService.createOrder({
+            table_id: table.id,
+            customer_id: currentUser.id,
+            status: "draft"
+        })
+        
+        NAVIGATE to "/customer/menu" with order_id
+    ELSE:
+        SHOW toast "Table is occupied"
+
+RENDER:
+    IF NOT selectedFloor:
+        SHOW grid of floor cards
+    ELSE:
+        SHOW grid of table cards with status colors
+
+---
+
+### **3. Customer Menu & Cart**
+
+**Pseudocode - Backend (productController.js, orderController.js)**
+FUNCTION getAllProducts(request, response):
+products = SELECT p.*, c.name as category_name
+FROM products p
+JOIN product_categories c ON p.category_id = c.id
+WHERE p.is_active = true AND p.is_available = true
+ORDER BY c.display_order, p.name
+FOR EACH product IN products:
+    product.variants = SELECT * FROM product_variants 
+                      WHERE product_id = product.id 
+                      AND is_active = true
+
+RETURN response with products
+FUNCTION addOrderItem(request, response):
+GET order_id, product_id, variant_id, quantity, notes FROM request.body
+// Verify order belongs to current user
+order = SELECT FROM orders WHERE id = order_id AND customer_id = current_user_id
+
+IF NOT order:
+    RETURN error "Order not found"
+
+// Get product details
+product = SELECT FROM products WHERE id = product_id
+variant = SELECT FROM product_variants WHERE id = variant_id (if provided)
+
+// Calculate prices
+unit_price = product.price
+variant_price = variant ? variant.extra_price : 0
+line_total = (unit_price + variant_price) * quantity
+tax_amount = line_total * (product.tax_percentage / 100)
+
+// Add item to order
+order_item = INSERT INTO order_items (
+    order_id, product_id, variant_id, quantity,
+    unit_price, variant_price, tax_percentage, line_total, notes
+)
+
+// Update order totals
+UPDATE orders SET
+    subtotal = subtotal + line_total,
+    tax_amount = tax_amount + tax_amount,
+    total_amount = subtotal + tax_amount
+WHERE id = order_id
+
+RETURN response with order_item
+
+**Pseudocode - Frontend (MenuPage.jsx, CartContext.jsx)**
+CONTEXT CartContext:
+STATE cart = {
+order_id: null,
+items: [],
+subtotal: 0,
+tax: 0,
+total: 0
+}
+FUNCTION addToCart(product, variant, quantity):
+    // Check if item already in cart
+    existing_item = FIND in cart.items WHERE 
+                    product_id = product.id AND 
+                    variant_id = variant?.id
+    
+    IF existing_item:
+        existing_item.quantity += quantity
+    ELSE:
+        cart.items.PUSH({
+            product_id: product.id,
+            product_name: product.name,
+            variant_id: variant?.id,
+            variant_name: variant?.attribute_value,
+            quantity: quantity,
+            unit_price: product.price,
+            variant_price: variant?.extra_price || 0
+        })
+    
+    // Recalculate totals
+    recalculateCart()
+    
+    // Persist to backend
+    AWAIT orderService.addOrderItem(cart.order_id, item_data)
+
+FUNCTION recalculateCart():
+    subtotal = 0
+    tax = 0
+    
+    FOR EACH item IN cart.items:
+        item_total = (item.unit_price + item.variant_price) * item.quantity
+        subtotal += item_total
+    
+    tax = subtotal * 0.05 // Assuming 5% tax
+    total = subtotal + tax
+    
+    SET cart.subtotal = subtotal
+    SET cart.tax = tax
+    SET cart.total = total
+COMPONENT MenuPage:
+products = AWAIT productService.getAllProducts()
+categories = GROUP products BY category_name
+FUNCTION handleAddToCart(product, variant, quantity):
+    cartContext.addToCart(product, variant, quantity)
+    SHOW toast "Added to cart"
+
+RENDER:
+    FOR EACH category IN categories:
+        SHOW category heading
+        FOR EACH product IN category.products:
+            SHOW ProductCard with:
+                - product image
+                - product name
+                - price
+                - variant selector (if variants exist)
+                - quantity selector
+                - add to cart button
+
+---
+
+### **4. Payment Processing**
+
+**Pseudocode - Backend (paymentController.js)**
+FUNCTION processPayment(request, response):
+GET order_id, payment_method_id, amount FROM request.body
+// Verify order
+order = SELECT FROM orders WHERE id = order_id
+
+IF order.total_amount != amount:
+    RETURN error "Amount mismatch"
+
+// Get payment method details
+payment_method = SELECT FROM payment_methods WHERE id = payment_method_id
+
+// Create payment record
+payment = INSERT INTO payments (
+    order_id,
+    session_id: get active session for current user,
+    payment_method_id,
+    amount,
+    status: "pending"
+)
+
+// Handle different payment methods
+IF payment_method.name is "cash":
+    // Mark as completed immediately
+    UPDATE payments SET status = "completed", paid_at = NOW()
+    WHERE id = payment.id
+    
+ELSE IF payment_method.name is "upi_qr":
+    // Generate QR code
+    qr_data = GENERATE QR with UPI string:
+              "upi://pay?pa={upi_id}&pn=RestaurantName&am={amount}&tn=Order{order_number}"
+    
+    RETURN response with {payment_id, qr_code: qr_data, status: "pending"}
+    
+ELSE IF payment_method.name is "netbanking" OR "card":
+    // Return payment gateway mock URL (for hackathon)
+    payment_url = "https://mock-payment-gateway.com/pay?ref=" + payment.id
+    RETURN response with {payment_id, payment_url, status: "pending"}
+
+// Update order status
+UPDATE orders SET status = "paid", paid_at = NOW()
+WHERE id = order_id
+
+// Update table status
+UPDATE tables SET status = "available"
+WHERE id = order.table_id
+
+// Emit socket event for customer display
+SOCKET.emit("payment_completed", {order_id, payment_id})
+
+RETURN response with payment
+FUNCTION verifyPayment(request, response):
+GET payment_id FROM request.params
+payment = SELECT FROM payments WHERE id = payment_id
+
+// Mock verification (for hackathon, simulate success)
+UPDATE payments SET status = "completed", paid_at = NOW()
+WHERE id = payment_id
+
+RETURN response with {verified: true, payment}
+
+**Pseudocode - Frontend (PaymentPage.jsx)**
+COMPONENT PaymentPage:
+STATE order = null
+STATE paymentMethods = []
+STATE selectedMethod = null
+STATE qrCode = null
+STATE loading = false
+ON COMPONENT MOUNT:
+    loadOrder()
+    loadPaymentMethods()
+
+FUNCTION loadOrder():
+    order_id = GET from URL params
+    order_data = AWAIT orderService.getOrderById(order_id)
+    SET order = order_data
+
+FUNCTION loadPaymentMethods():
+    methods = AWAIT paymentService.getEnabledMethods()
+    SET paymentMethods = methods
+
+FUNCTION selectPaymentMethod(method):
+    SET selectedMethod = method
+
+FUNCTION processPayment():
+    SET loading = true
+    
+    IF selectedMethod.name is "cash":
+        // Direct payment
+        result = AWAIT paymentService.processPayment({
+            order_id: order.id,
+            payment_method_id: selectedMethod.id,
+            amount: order.total_amount
+        })
+        
+        IF result.success:
+            SHOW success animation
+            NAVIGATE to "/customer/order-tracking" with order_id
+    
+    ELSE IF selectedMethod.name is "upi_qr":
+        // Generate QR code
+        result = AWAIT paymentService.processPayment({
+            order_id: order.id,
+            payment_method_id: selectedMethod.id,
+            amount: order.total_amount
+        })
+        
+        SET qrCode = result.qr_code
+        // Show QR code modal
+        
+    ELSE IF selectedMethod.name is "netbanking" OR "card":
+        // Open mock payment gateway
+        result = AWAIT paymentService.processPayment({
+            order_id: order.id,
+            payment_method_id: selectedMethod.id,
+            amount: order.total_amount
+        })
+        
+        // Open payment URL in new window
+        WINDOW.open(result.payment_url, "_blank")
+        
+        // Poll for payment verification
+        startPaymentPolling(result.payment_id)
+    
+    SET loading = false
+
+FUNCTION confirmQRPayment():
+    // User confirms they've paid via QR
+    result = AWAIT paymentService.verifyPayment(payment_id)
+    
+    IF result.verified:
+        SHOW success animation
+        NAVIGATE to "/customer/order-tracking"
+
+RENDER:
+    SHOW order summary
+    SHOW payment method selector
+    IF selectedMethod:
+        IF selectedMethod is UPI QR:
+            IF qrCode:
+                SHOW QR code
+                SHOW "Confirm" button
+            ELSE:
+                SHOW "Generate QR" button
+        ELSE:
+            SHOW "Pay Now" button
+
+---
+
+### **5. Kitchen Display System**
+
+**Pseudocode - Backend (kitchenController.js, Socket Handler)**
+FUNCTION getKitchenOrders(request, response):
+kitchen_orders = SELECT ko.*, o.order_number, t.table_number
+FROM kitchen_orders ko
+JOIN orders o ON ko.order_id = o.id
+LEFT JOIN tables t ON o.table_id = t.id
+WHERE ko.stage IN ('to_cook', 'preparing', 'completed')
+ORDER BY ko.received_at ASC
+RETURN response with kitchen_orders
+FUNCTION updateOrderStage(request, response):
+GET order_id, new_stage FROM request.body
+UPDATE kitchen_orders SET
+    stage = new_stage,
+    updated_at = NOW(),
+    started_at = CASE WHEN new_stage = 'preparing' THEN NOW() ELSE started_at END,
+    completed_at = CASE WHEN new_stage = 'completed' THEN NOW() ELSE completed_at END
+WHERE order_id = order_id
+
+// Update main order status
+UPDATE orders SET status = new_stage
+WHERE id = order_id
+
+// Emit socket event
+SOCKET.to('kitchen').emit('order_stage_updated', {order_id, new_stage})
+SOCKET.to('customer_' + order.customer_id).emit('order_status_updated', {order_id, new_stage})
+
+RETURN response with updated kitchen_order
+SOCKET HANDLER - When order sent to kitchen:
+ON EVENT "send_to_kitchen":
+GET order_id FROM event_data
+    order = SELECT FROM orders WHERE id = order_id
+    order_items = SELECT oi.*, p.name, p.category_id
+                  FROM order_items oi
+                  JOIN products p ON oi.product_id = p.id
+                  WHERE oi.order_id = order_id
+    
+    // Only send items from categories marked to send to kitchen
+    kitchen_items = FILTER order_items WHERE category.send_to_kitchen = true
+    
+    kitchen_order = INSERT INTO kitchen_orders (
+        order_id,
+        ticket_number: order.order_number,
+        table_number: order.table.table_number,
+        stage: 'to_cook',
+        items: JSON of kitchen_items
+    )
+    
+    // Broadcast to kitchen displays
+    SOCKET.to('kitchen').emit('new_kitchen_order', kitchen_order)
+
+**Pseudocode - Frontend (KitchenDisplayPage.jsx)**
+COMPONENT KitchenDisplayPage:
+STATE orders = {
+to_cook: [],
+preparing: [],
+completed: []
+}
+STATE socket = useSocket()
+ON COMPONENT MOUNT:
+    fetchKitchenOrders()
+    subscribeToRealtimeUpdates()
+    socket.emit('join_kitchen')
+    
+    socket.on('new_kitchen_order', handleNewOrder)
+    socket.on('order_stage_updated', handleStageUpdate)
+
+FUNCTION fetchKitchenOrders():
+    orders_data = AWAIT kitchenService.getKitchenOrders()
+    categorizeOrders(orders_data)
+
+FUNCTION categorizeOrders(orders_data):
+FOR EACH order IN orders_data:
+orders[order.stage].PUSH(order)
+FUNCTION handleNewOrder(new_order):
+    orders.to_cook.PUSH(new_order)
+    PLAY notification sound
+    SET orders = {...orders}
+
+FUNCTION handleStageUpdate({order_id, new_stage}):
+    // Find order in current stage and move to new stage
+    FOR EACH stage IN ['to_cook', 'preparing', 'completed']:
+        index = FIND INDEX of order in orders[stage] WHERE id = order_id
+        IF index >= 0:
+            order = orders[stage][index]
+            orders[stage].SPLICE(index, 1)
+            order.stage = new_stage
+            orders[new_stage].PUSH(order)
+            BREAK
+    
+    SET orders = {...orders}
+
+FUNCTION moveToNextStage(order):
+    IF order.stage is 'to_cook':
+        new_stage = 'preparing'
+    ELSE IF order.stage is 'preparing':
+        new_stage = 'completed'
+    ELSE:
+        RETURN
+    
+    AWAIT kitchenService.updateOrderStage(order.id, new_stage)
+    // Socket will handle UI update
+
+FUNCTION markItemPrepared(order_id, item_id):
+    AWAIT kitchenService.markItemPrepared(order_id, item_id)
+    
+    // Update local state
+    FOR EACH stage IN orders:
+        FOR EACH order IN orders[stage]:
+            IF order.id = order_id:
+                FOR EACH item IN order.items:
+                    IF item.id = item_id:
+                        item.kitchen_status = 'completed'
+
+RENDER:
+    THREE COLUMNS (To Cook, Preparing, Completed):
+        FOR EACH order IN orders[column_stage]:
+            SHOW OrderTicket with:
+                - ticket number
+                - table number
+                - items list
+                - time elapsed
+                - click to move to next stage
+
+---
+
+### **6. Customer Order Tracking**
+
+**Pseudocode - Frontend (OrderTrackingPage.jsx)**
+COMPONENT OrderTrackingPage:
+STATE order = null
+STATE socket = useSocket()
+ON COMPONENT MOUNT:
+    loadOrder()
+    subscribeToUpdates()
+
+FUNCTION loadOrder():
+    order_id = GET from URL params OR from latest order
+    order_data = AWAIT orderService.getOrderById(order_id)
+    SET order = order_data
+
+FUNCTION subscribeToUpdates():
+    // Subscribe to realtime updates for this order
+    supabase
+        .channel(`order_${order.id}`)
+        .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'orders',
+            filter: `id=eq.${order.id}`
+        }, handleOrderUpdate)
+        .subscribe()
+    
+    // Also listen to socket events
+    socket.on(`order_status_updated`, handleOrderUpdate)
+
+FUNCTION handleOrderUpdate(payload):
+    updated_order = payload.new OR payload
+    SET order = updated_order
+
+FUNCTION getStatusSteps():
+    RETURN [
+        {name: 'Ordered', status: 'confirmed', completed: true},
+        {name: 'Sent to Kitchen', status: 'sent_to_kitchen', completed: order.status >= 'sent_to_kitchen'},
+        {name: 'Preparing', status: 'preparing', completed: order.status >= 'preparing'},
+        {name: 'Ready', status: 'ready', completed: order.status >= 'ready'},
+        {name: 'Completed', status: 'completed', completed: order.status = 'completed'}
+    ]
+
+RENDER:
+    SHOW order details
+    SHOW status progress bar with steps
+    FOR EACH item IN order.items:
+        SHOW item name, quantity
+        SHOW item kitchen_status
+    
+    IF order.status is 'completed':
+        SHOW "Give Feedback" button → navigate to FeedbackPage
+
+---
+
+### **7. Feedback System**
+
+**Pseudocode - Backend (feedbackController.js)**
+FUNCTION submitFeedback(request, response):
+GET all feedback fields FROM request.body:
+- order_id
+- customer_id
+- overall_rating
+- food_quality_rating
+- service_rating
+- payment_experience_rating
+- payment_method_used
+- payment_seamless
+- ambience_rating
+- cleanliness_rating
+- liked_items (array)
+- disliked_items (array)
+- favorite_dish
+- suggestions
+- would_recommend
+- comments
+- is_anonymous
+// Verify order belongs to customer
+order = SELECT FROM orders WHERE id = order_id AND customer_id = customer_id
+
+IF NOT order:
+    RETURN error "Invalid order"
+
+// Check if feedback already exists
+existing = SELECT FROM feedback WHERE order_id = order_id
+
+IF existing:
+    RETURN error "Feedback already submitted"
+
+feedback = INSERT INTO feedback (all fields above)
+
+RETURN response with {success: true, feedback_id}
+FUNCTION getFeedbackStats(request, response):
+stats = {
+total_feedbacks: COUNT FROM feedback,
+average_overall_rating: AVG(overall_rating) FROM feedback,
+average_food_rating: AVG(food_quality_rating) FROM feedback,
+average_service_rating: AVG(service_rating) FROM feedback,
+average_payment_rating: AVG(payment_experience_rating) FROM feedback,
+total_recommendations: COUNT FROM feedback WHERE would_recommend = true,
+    payment_method_ratings: 
+        SELECT payment_method_used, AVG(payment_experience_rating)
+        FROM feedback
+        GROUP BY payment_method_used,
+    
+    most_liked_items:
+        SELECT item, COUNT(*) as count
+        FROM feedback, UNNEST(liked_items) as item
+        GROUP BY item
+        ORDER BY count DESC
+        LIMIT 10,
+    
+    improvement_areas:
+        SELECT suggestions
+        FROM feedback
+        WHERE suggestions IS NOT NULL
+}
+
+RETURN response with stats
+
+**Pseudocode - Frontend (FeedbackPage.jsx)**
+COMPONENT FeedbackPage:
+STATE order = null
+STATE formData = {
+overall_rating: 0,
+food_quality_rating: 0,
+service_rating: 0,
+payment_experience_rating: 0,
+payment_seamless: null,
+ambience_rating: 0,
+cleanliness_rating: 0,
+liked_items: [],
+disliked_items: [],
+favorite_dish: "",
+suggestions: "",
+would_recommend: null,
+comments: "",
+is_anonymous: false
+}
+STATE submitting = false
+ON COMPONENT MOUNT:
+    loadOrder()
+
+FUNCTION loadOrder():
+    order_id = GET from URL params
+    order_data = AWAIT orderService.getOrderById(order_id)
+    SET order = order_data
+    
+    // Pre-fill payment method
+    formData.payment_method_used = order.payment_method_name
+
+FUNCTION handleRatingChange(field, value):
+    formData[field] = value
+
+FUNCTION handleItemSelection(item, type):
+    IF type is "liked":
+        IF item IN formData.liked_items:
+            REMOVE item from formData.liked_items
+        ELSE:
+            ADD item to formData.liked_items
+    ELSE IF type is "disliked":
+        // Similar logic for disliked_items
+
+FUNCTION handleSubmit():
+    // Validate required fields
+    IF overall_rating = 0:
+        SHOW error "Please provide overall rating"
+        RETURN
+    
+    SET submitting = true
+    
+    result = AWAIT feedbackService.submitFeedback({
+        order_id: order.id,
+        customer_id: currentUser.id,
+        ...formData
+    })
+    
+    IF result.success:
+        SHOW success toast "Thank you for your feedback!"
+        SHOW confetti animation
+        WAIT 2 seconds
+        NAVIGATE to "/customer/dashboard"
+    ELSE:
+        SHOW error toast
+    
+    SET submitting = false
+
+RENDER:
+    FORM:
+        SECTION "Overall Experience":
+            SHOW star rating for overall_rating
+        
+        SECTION "Food Quality":
+            SHOW star rating for food_quality_rating
+            SHOW checkbox list of order items for liked/disliked
+            SHOW input for favorite_dish
+        
+        SECTION "Service":
+            SHOW star rating for service_rating
+        
+        SECTION "Payment Experience":
+            SHOW star rating for payment_experience_rating
+            SHOW yes/no toggle for payment_seamless
+            SHOW text: "Payment method used: {order.payment_method}"
+        
+        SECTION "Ambience & Cleanliness":
+            SHOW star rating for ambience_rating
+            SHOW star rating for cleanliness_rating
+        
+        SECTION "Additional Feedback":
+            SHOW textarea for suggestions
+            SHOW textarea for comments
+            SHOW toggle for would_recommend
+            SHOW checkbox for is_anonymous
+        
+        SHOW submit button
+
+---
+
+### **8. Cashier - View All Customer Orders**
+
+**Pseudocode - Backend (orderController.js)**
+FUNCTION getAllOrdersForCashier(request, response):
+GET session_id FROM request (current active session)
+GET filters FROM request.query (status, table_id, date_range)
+query = BUILD query:
+    SELECT o.*, 
+           t.table_number, 
+           t.floor_id,
+           f.name as floor_name,
+           u.full_name as customer_name,
+           COUNT(oi.id) as items_count
+    FROM orders o
+    LEFT JOIN tables t ON o.table_id = t.id
+    LEFT JOIN floors f ON t.floor_id = f.id
+    LEFT JOIN users u ON o.customer_id = u.id
+    LEFT JOIN order_items oi ON o.id = oi.order_id
+    WHERE o.session_id = session_id
+
+IF filters.status:
+    query += AND o.status = filters.status
+
+IF filters.table_id:
+    query += AND o.table_id = filters.table_id
+
+IF filters.date_range:
+    query += AND o.created_at BETWEEN filters.start_date AND filters.end_date
+
+query += GROUP BY o.id, t.table_number, f.name, u.full_name
+query += ORDER BY o.created_at DESC
+
+orders = EXECUTE query
+
+RETURN response with orders
+
+**Pseudocode - Frontend (AllOrdersPage.jsx)**
+COMPONENT AllOrdersPage:
+STATE orders = []
+STATE filters = {
+status: 'all',
+table_id: null,
+date_range: 'today'
+}
+STATE socket = useSocket()
+ON COMPONENT MOUNT:
+    fetchOrders()
+    subscribeToRealtimeUpdates()
+    
+    socket.on('new_order_created', handleNewOrder)
+    socket.on('order_status_changed', handleOrderUpdate)
+
+FUNCTION fetchOrders():
+    orders_data = AWAIT orderService.getAllOrdersForCashier(filters)
+    SET orders = orders_data
+
+FUNCTION handleFilterChange(filter_key, value):
+    filters[filter_key] = value
+    fetchOrders()
+
+FUNCTION handleNewOrder(new_order):
+    orders.UNSHIFT(new_order)
+    SET orders = [...orders]
+    SHOW toast "New order received"
+    PLAY notification sound
+
+FUNCTION handleOrderUpdate({order_id, updated_fields}):
+    index = FIND INDEX of order in orders WHERE id = order_id
+    IF index >= 0:
+        orders[index] = {...orders[index], ...updated_fields}
+        SET orders = [...orders]
+
+FUNCTION viewOrderDetails(order_id):
+    NAVIGATE to "/cashier/order-details/" + order_id
+
+RENDER:
+    SHOW filters section:
+        - status dropdown (all, draft, confirmed, preparing, ready, completed)
+        - table selector
+        - date range selector
+    
+    SHOW orders table/grid:
+        FOR EACH order IN orders:
+            SHOW CustomerOrderCard with:
+                - order number
+                - table number
+                - customer name
+                - items count
+                - total amount
+                - status badge
+                - time elapsed
+                - view details button
+
+---
+
+### **9. Reporting & Dashboard**
+
+**Pseudocode - Backend (reportController.js)**
+FUNCTION getSalesReport(request, response):
+GET filters FROM request.query:
+- period (today, week, month, custom)
+- session_id
+- responsible (user_id)
+- product_id
+- start_date
+- end_date
+// Build date range
+IF period is "today":
+    date_range = {start: TODAY 00:00, end: TODAY 23:59}
+ELSE IF period is "week":
+    date_range = {start: 7 days ago, end: NOW}
+ELSE IF period is "custom":
+    date_range = {start: filters.start_date, end: filters.end_date}
+
+// Main sales query
+sales_data = SELECT 
+                COUNT(o.id) as total_orders,
+                SUM(o.total_amount) as total_revenue,
+                SUM(o.tax_amount) as total_tax,
+                SUM(o.discount_amount) as total_discounts,
+                AVG(o.total_amount) as average_order_value
+             FROM orders o
+             WHERE o.status = 'completed'
+             AND o.created_at BETWEEN date_range.start AND date_range.end
+
+IF filters.session_id:
+    sales_data += AND o.session_id = filters.session_id
+
+IF filters.responsible:
+    sales_data += AND (o.user_id = filters.responsible OR o.cashier_id = filters.responsible)
+
+// Payment method breakdown
+payment_breakdown = SELECT 
+                       pm.display_name,
+                       COUNT(p.id) as transaction_count,
+                       SUM(p.amount) as total_amount
+                    FROM payments p
+                    JOIN payment_methods pm ON p.payment_method_id = pm.id
+                    WHERE p.status = 'completed'
+                    AND p.created_at BETWEEN date_range.start AND date_range.end
+                    GROUP BY pm.display_name
+
+// Hourly sales trend
+hourly_trend = SELECT 
+                  EXTRACT(HOUR FROM created_at) as hour,
+                  COUNT(id) as orders_count,
+                  SUM(total_amount) as revenue
+               FROM orders
+               WHERE status = 'completed'
+               AND created_at BETWEEN date_range.start AND date_range.end
+               GROUP BY hour
+               ORDER BY hour
+
+// Product-specific filtering
+IF filters.product_id:
+    product_sales = SELECT 
+                       p.name,
+                       SUM(oi.quantity) as units_sold,
+                       SUM(oi.line_total) as revenue
+                    FROM order_items oi
+                    JOIN products p ON oi.product_id = p.id
+                    JOIN orders o ON oi.order_id = o.id
+                    WHERE o.status = 'completed'
+                    AND oi.product_id = filters.product_id
+                    AND o.created_at BETWEEN date_range.start AND date_range.end
+
+report = {
+    summary: sales_data,
+    payment_breakdown,
+    hourly_trend,
+    product_sales (if filtered)
+}
+
+RETURN response with report
+FUNCTION getProductReport(request, response):
+GET date_range FROM request
+product_stats = SELECT 
+                   p.id,
+                   p.name,
+                   c.name as category,
+                   SUM(oi.quantity) as units_sold,
+                   SUM(oi.line_total) as revenue,
+                   COUNT(DISTINCT oi.order_id) as order_count,
+                   AVG(oi.line_total / oi.quantity) as avg_price
+                FROM order_items oi
+                JOIN products p ON oi.product_id = p.id
+                JOIN product_categories c ON p.category_id = c.id
+                JOIN orders o ON oi.order_id = o.id
+                WHERE o.status = 'completed'
+                AND o.created_at BETWEEN date_range.start AND date_range.end
+                GROUP BY p.id, p.name, c.name
+                ORDER BY revenue DESC
+
+RETURN response with product_stats
+FUNCTION exportPDF(request, response):
+GET report_data FROM request.body
+pdf = CREATE PDF document using pdfkit
+
+ADD title: "Sales Report - " + report_data.period
+ADD summary section with key metrics
+ADD charts (if applicable)
+ADD detailed tables
+
+RETURN pdf as downloadable file
+FUNCTION exportExcel(request, response):
+GET report_data FROM request.body
+workbook = CREATE Excel workbook using exceljs
+
+ADD sheet "Summary" with overview metrics
+ADD sheet "Detailed Sales" with all orders
+ADD sheet "Product Performance" with product stats
+ADD sheet "Payment Methods" with payment breakdown
+
+RETURN excel file as downloadable
+
+**Pseudocode - Frontend (ReportsPage.jsx)**
+COMPONENT ReportsPage:
+STATE filters = {
+period: 'today',
+session_id: null,
+responsible: null,
+product_id: null,
+start_date: null,
+end_date: null
+}
+STATE reportData = null
+STATE loading = false
+FUNCTION handleFilterChange(key, value):
+    filters[key] = value
+    
+    IF key is "period" AND value != "custom":
+        filters.start_date = null
+        filters.end_date = null
+    
+    fetchReport()
+
+FUNCTION fetchReport():
+    SET loading = true
+    report = AWAIT reportService.getSalesReport(filters)
+    SET reportData = report
+    SET loading = false
+
+FUNCTION exportReport(format):
+    IF format is "pdf":
+        blob = AWAIT reportService.exportPDF(reportData)
+        DOWNLOAD blob as "sales-report.pdf"
+    ELSE IF format is "excel":
+        blob = AWAIT reportService.exportExcel(reportData)
+        DOWNLOAD blob as "sales-report.xlsx"
+
+RENDER:
+    SHOW ReportFilters component:
+        - period selector
+        - session dropdown
+        - responsible user dropdown
+        - product selector
+        - custom date range picker (if period is "custom")
+    
+    IF loading:
+        SHOW loading spinner
+    ELSE IF reportData:
+        SHOW summary cards:
+            - total orders
+            - total revenue
+            - average order value
+            - total tax collected
+        
+        SHOW charts:
+            - hourly sales trend (line chart)
+            - payment method breakdown (pie chart)
+            - top selling products (bar chart)
+        
+        SHOW detailed tables:
+            - sales by session
+            - sales by product
+            - sales by payment method
+        
+        SHOW export buttons:
+            - export as PDF
+            - export as Excel
+
+---
+
+## ⚡ Realtime Features Implementation
+
+### **Supabase Realtime Subscriptions**
+
+**Tables with Realtime Enabled:**
+- `tables` - for table status updates
+- `orders` - for order status changes
+- `kitchen_orders` - for kitchen display updates
+- `payments` - for payment status
+
+**Pseudocode - Realtime Hook (useRealtime.js)**
+FUNCTION useRealtimeSubscription(tableName, filter, callback):
+useEffect:
+channel = supabase
+.channel(${tableName}_realtime)
+.on('postgres_changes', {
+event: '*',
+schema: 'public',
+table: tableName,
+filter: filter
+}, (payload) => {
+callback(payload)
+})
+.subscribe()
+    RETURN cleanup function:
+        supabase.removeChannel(channel)
+
+dependencies: [tableName, filter]
+
+### **Socket.IO Events**
+
+**Server-side Events:**
+// Order events
+socket.emit('new_order_created', order_data)
+socket.emit('order_status_changed', {order_id, new_status})
+socket.emit('order_sent_to_kitchen', kitchen_order_data)
+// Kitchen events
+socket.emit('kitchen_order_received', kitchen_order)
+socket.emit('order_stage_updated', {order_id, new_stage})
+socket.emit('item_prepared', {order_id, item_id})
+// Table events
+socket.emit('table_status_changed', {table_id, new_status})
+// Payment events
+socket.emit('payment_initiated', payment_data)
+socket.emit('payment_completed', {order_id, payment_id})
+// Customer display events
+socket.emit('order_updated', order_data)
+
+**Client-side Listeners:**
+// Cashier
+socket.on('new_order_created', handleNewOrder)
+socket.on('table_status_changed', updateTableStatus)
+// Kitchen
+socket.join('kitchen')
+socket.on('kitchen_order_received', addToKitchenQueue)
+// Customer
+socket.on('order_status_changed', updateOrderTracking)
+socket.on('payment_completed', showPaymentSuccess)
+
+---
+
+## 💳 Payment Integration (Free Solutions)
+
+### **Payment Methods Implementation**
+
+**1. Cash Payment**
+PSEUDOCODE:
+
+User selects cash
+System marks payment as completed immediately
+No external integration needed
+
+
+**2. UPI QR Code**
+LIBRARY: qrcode (npm package)
+PSEUDOCODE:
+
+Get UPI ID from payment_methods table
+Generate UPI string: "upi://pay?pa={upi_id}&pn={merchant_name}&am={amount}&tn={order_number}"
+Generate QR code using qrcode library
+Display QR to customer
+Customer scans and pays
+Customer clicks "I've Paid" button
+System marks as completed (trust-based for hackathon)
+
+ALTERNATIVE (verification):
+
+Use UPI transaction ID input
+Store transaction ID for reference
+
+
+**3. Mock Net Banking / Card**
+PSEUDOCODE:
+
+Create mock payment gateway page
+Redirect user to mock page with payment details
+Mock page shows card/bank details form
+On "Pay" click, redirect back with success token
+Verify token and mark payment complete
+
+IMPLEMENTATION:
+
+Create simple HTML page hosted on same domain
+Use query parameters for payment details
+Return to callback URL with status
+
+
+**4. Free Payment Gateway Options** (for more realistic demo)
+OPTIONS:
+
+Razorpay Test Mode (free for testing)
+Stripe Test Mode (free for testing)
+PhonePe Simulator (for UPI testing)
+
+IMPLEMENTATION (Razorpay example):
+
+Sign up for Razorpay
+Use test API keys
+Integrate Razorpay checkout
+Use test cards: 4111 1111 1111 1111
+
+
+---
+
+## 🚀 Deployment Strategy
+
+### **Environment Setup**
+
+**Required Environment Variables:**
+
+**Server (.env)**
+Supabase
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_ANON_KEY=your_anon_key_here
+SUPABASE_SERVICE_KEY=your_service_key_here
+JWT
+JWT_SECRET=your_very_long_random_secret_key_minimum_32_characters
+App Config
+NODE_ENV=production
+PORT=3000
+CLIENT_URL=https://your-frontend.vercel.app
+Optional (for payment gateways)
+RAZORPAY_KEY_ID=your_test_key
+RAZORPAY_KEY_SECRET=your_test_secret
+
+**Client (.env.local)**
+VITE_API_URL=https://your-backend.vercel.app
+VITE_SUPABASE_URL=https://xxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key_here
+VITE_SOCKET_URL=https://your-backend.vercel.app
+
+---
+
+### **Supabase Setup Steps**
+
+**1. Create Project**
+
+Go to supabase.com
+Click "New Project"
+Name: odoo-cafe-pos
+Database Password: [save this]
+Region: closest to you
+
+
+**2. Run Database Migrations**
+
+Go to SQL Editor
+Copy all CREATE TABLE statements from schema
+Run in order
+Verify all tables created
+
+
+**3. Enable Realtime**
+
+Go to Database > Replication
+Enable for: tables, orders, kitchen_orders, payments
+Click "Save"
+
+
+**4. Set Row Level Security (Optional for hackathon)**
+SQL:
+-- Allow authenticated users to read/write their own data
+CREATE POLICY "Users can view own orders"
+ON orders FOR SELECT
+USING (auth.uid() = customer_id OR auth.uid() = cashier_id);
+-- Kitchen can view all kitchen orders
+CREATE POLICY "Kitchen access"
+ON kitchen_orders FOR ALL
+USING (true);
+
+**5. Get API Keys**
+
+Go to Settings > API
+Copy URL
+Copy anon/public key
+Copy service_role key (keep secret!)
+
+
+---
+
+### **Vercel Deployment**
+
+**Backend Deployment (vercel.json in server/)**
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "src/server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
+```
+
+**⚠️ Important: Socket.IO on Vercel**
+
+Vercel serverless functions don't support WebSockets. You have 2 options:
+
+**Option A: Deploy Socket Server Separately** (Recommended)
+PLATFORMS:
+
+Railway.app (free tier)
+Render.com (free tier)
+Fly.io (free tier)
+
+STEPS:
+
+Create separate socket server
+Deploy to Railway/Render
+Update VITE_SOCKET_URL to point to socket server
+Keep REST API on Vercel
+
+
+**Option B: Use Supabase Realtime Only**
+
+Skip Socket.IO completely
+Use only Supabase realtime subscriptions
+Simpler but less flexible
+
+
+**Frontend Deployment (vercel.json in client/)**
+```json
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+```
+
+**Deployment Commands:**
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy backend
+cd server
+vercel --prod
+
+# Deploy frontend
+cd client
+vercel --prod
+```
+
+**Post-Deployment:**
+
+Copy backend URL
+Update client .env with backend URL
+Redeploy frontend
+Test all features
+
+
+---
+
+## 📝 Development Checklist
+
+### **Phase 1: Setup & Foundation**
+- [ ] Initialize React app with Vite
+- [ ] Setup Tailwind CSS
+- [ ] Initialize Node.js backend
+- [ ] Setup Supabase project
+- [ ] Create all database tables
+- [ ] Setup environment variables
+- [ ] Create basic folder structure
+
+### **Phase 2: Authentication**
+- [ ] Build login/signup UI
+- [ ] Implement JWT authentication
+- [ ] Create protected routes
+- [ ] Add role-based access control
+- [ ] Test all user roles login
+
+### **Phase 3: Core POS Features**
+- [ ] Product management CRUD
+- [ ] Category management
+- [ ] Floor & table management
+- [ ] POS session management
+- [ ] Order creation flow
+- [ ] Cart functionality
+
+### **Phase 4: Customer Features**
+- [ ] Floor selection page
+- [ ] Table selection with availability
+- [ ] Menu browsing
+- [ ] Add to cart
+- [ ] Order summary
+- [ ] Payment method selection
+- [ ] Order tracking
+
+### **Phase 5: Payment Integration**
+- [ ] Cash payment flow
+- [ ] UPI QR code generation
+- [ ] Mock payment gateway
+- [ ] Payment verification
+- [ ] Payment confirmation screens
+
+### **Phase 6: Kitchen System**
+- [ ] Kitchen display board
+- [ ] Real-time order reception
+- [ ] Stage management (to cook, preparing, completed)
+- [ ] Item marking as prepared
+- [ ] Socket.IO integration
+
+### **Phase 7: Cashier Features**
+- [ ] View all customer orders
+- [ ] Process walk-in orders
+- [ ] Payment processing
+- [ ] Session management
+- [ ] Register operations
+
+### **Phase 8: Feedback System**
+- [ ] Feedback form design
+- [ ] All rating categories
+- [ ] Item selection (liked/disliked)
+- [ ] Submit feedback
+- [ ] View feedback analytics
+
+### **Phase 9: Reports & Analytics**
+- [ ] Sales reports
+- [ ] Product performance
+- [ ] Session reports
+- [ ] Feedback analytics
+- [ ] PDF export
+- [ ] Excel export
+
+### **Phase 10: Realtime Features**
+- [ ] Supabase realtime setup
+- [ ] Socket.IO setup
+- [ ] Order status updates
+- [ ] Kitchen updates
+- [ ] Table status updates
+
+### **Phase 11: Polish & Testing**
+- [ ] Error handling
+- [ ] Loading states
+- [ ] Toast notifications
+- [ ] Responsive design
+- [ ] Cross-browser testing
+- [ ] Performance optimization
+
+### **Phase 12: Deployment**
+- [ ] Deploy Supabase migrations
+- [ ] Deploy backend to Vercel/Railway
+- [ ] Deploy frontend to Vercel
+- [ ] Test production environment
+- [ ] Setup monitoring
+
+---
+
+## 🎓 Learning Resources
+
+**React & State Management**
+- React Context API documentation
+- React Hooks guide
+- React Router DOM v6
+
+**Backend**
+- Express.js documentation
+- JWT authentication guide
+- Socket.IO documentation
+
+**Database**
+- PostgreSQL basics
+- Supabase documentation
+- Database design patterns
+
+**Deployment**
+- Vercel deployment guide
+- Environment variables best practices
+- CORS configuration
+
+---
+
+## 🔍 Testing Scenarios
+
+**Test Case 1: Customer Flow**
+1. Customer logs in
+2. Selects floor
+3. Chooses available table
+4. Browses menu
+5. Adds items to cart
+6. Proceeds to payment
+7. Completes payment (each method)
+8. Tracks order
+9. Submits feedback
+
+**Test Case 2: Cashier Flow**
+1. Cashier logs in
+2. Opens POS session
+3. Views all active orders
+4. Creates new order for walk-in
+5. Processes payment
+6. Views dashboard
+7. Closes session
+
+**Test Case 3: Kitchen Flow**
+1. Kitchen staff logs in
+2. Views kitchen display
+3. Receives new order
+4. Moves order through stages
+5. Marks items as prepared
+6. Completes order
+
+**Test Case 4: Realtime Updates**
+1. Customer places order
+2. Kitchen receives immediately
+3. Order status updates show to customer
+4. Payment completion updates all displays
+5. Table status updates in real-time
+
+---
+
+### Database Tables (Supabase PostgreSQL)
+
+The following tables are implemented in Supabase PostgreSQL
+and defined in `schema.sql`. These tables are REQUIRED
+for backend and frontend functionality.
+
+Core Tables:
+- users
+- floors
+- tables
+- product_categories
+- products
+- product_variants
+- orders
+- order_items
+- payments
+- pos_sessions
+- kitchen_orders
+- feedback
+- payment_methods
+- self_order_tokens
+- reports_cache
+
+Notes:
+- All tables use UUID primary keys
+- Monetary fields use DECIMAL / NUMERIC
+- Foreign keys enforce relational integrity
+- Timestamps are present on all transactional tables
+
+`schema.sql` is the single source of truth for table definitions.
+
+
+**Total Estimated Lines of Code: ~15,000-20,000 lines**
+- Backend: ~5,000 lines
+- Frontend: ~10,000 lines
+- Database: ~500 lines
+- Config/Utils: ~2,000 lines
+
+This project is comprehensive and demonstrates full-stack development skills, real-time features, payment integration, and deployment expertise. Perfect for a hackathon showcase! 🚀
