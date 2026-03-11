@@ -10,6 +10,16 @@ const DEMO_PASSWORD_HASH = '$2a$10$YourHashedPasswordHere';
 
 const mockUsers = [
     {
+        id: '1',
+        email: 'admin@demo.com',
+        password_hash: bcrypt.hashSync('demo123', 10),
+        full_name: 'Admin User',
+        phone: '+1234567890',
+        role: 'admin',
+        is_active: true,
+        created_at: new Date().toISOString()
+    },
+    {
         id: '2',
         email: 'cashier@demo.com',
         password_hash: bcrypt.hashSync('demo123', 10),

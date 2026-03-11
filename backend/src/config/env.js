@@ -3,9 +3,12 @@
  * 
  * Loads and validates environment variables from .env file.
  * Provides a single source of truth for all environment settings.
+ * On Vercel, env vars are injected via dashboard and dotenv silently skips.
  */
 
-require('dotenv').config();
+const path = require('path');
+// Load from backend/.env — works locally; silently skipped on Vercel (env injected via dashboard)
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const env = {
     // Server Configuration
