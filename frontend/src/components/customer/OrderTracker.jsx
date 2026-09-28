@@ -19,7 +19,7 @@ const OrderTracker = () => {
 
   useEffect(() => {
     if (order) {
-      // Set up Supabase subscriptions to orders table
+      // Set up MongoDB subscriptions to orders table
       const ordersChannel = subscribeToTable(
         'orders',
         `id=eq.${order.id}`,
@@ -32,7 +32,7 @@ const OrderTracker = () => {
         }
       )
 
-      // Set up Supabase subscriptions to kitchen_orders table
+      // Set up MongoDB subscriptions to kitchen_orders table
       const kitchenChannel = subscribeToTable(
         'kitchen_orders',
         `order_id=eq.${order.id}`,
