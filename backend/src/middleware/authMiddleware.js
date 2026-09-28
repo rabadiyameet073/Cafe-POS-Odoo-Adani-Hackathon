@@ -1,5 +1,5 @@
 const { verifyToken } = require('../services/tokenService');
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const { AuthenticationError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 const { findUserById } = require('../config/mockUsers');

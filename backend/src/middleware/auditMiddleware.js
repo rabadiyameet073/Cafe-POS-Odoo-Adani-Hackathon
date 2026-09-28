@@ -6,7 +6,7 @@
  * Requirements: Security NFR 3, 14.5
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const logger = require('../utils/logger');
 
 /**

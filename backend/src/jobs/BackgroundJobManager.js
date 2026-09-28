@@ -10,7 +10,7 @@
 const TimerService = require('../services/TimerService');
 const PaymentService = require('../services/PaymentService');
 const NotificationService = require('../services/NotificationService');
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const logger = require('../utils/logger');
 
 class BackgroundJobManager {

@@ -13,7 +13,7 @@
  * Requirements: 4.1, 5.2, 5.3, 6.1, 7.1, Security NFR 2
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const TableTokenService = require('./TableTokenService');
 const MonitoringService = require('./MonitoringService');
 const logger = require('../utils/logger');

@@ -7,7 +7,7 @@
  * Performance NFR 1, 2, 3: Reduces query load for frequently accessed static data
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const logger = require('../utils/logger');
 
 class CacheService {

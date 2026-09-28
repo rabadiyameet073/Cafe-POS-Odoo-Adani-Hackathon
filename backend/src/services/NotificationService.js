@@ -7,7 +7,7 @@
  * Requirements: 4.2, 9.5
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const logger = require('../utils/logger');
 
 class NotificationService {

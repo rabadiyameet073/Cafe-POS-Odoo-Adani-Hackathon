@@ -106,7 +106,7 @@ async function notifyAdministrator(errorDetails) {
         // - Send email/SMS to on-call admin
         
         // For now, create a notification record in the database
-        const { supabase } = require('../config/supabase');
+        const { supabase } = require('../config/db');
         await supabase.from('notifications').insert({
             type: 'system_error',
             recipient_role: 'admin',

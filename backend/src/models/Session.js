@@ -4,7 +4,7 @@
  * Database operations for pos_sessions table.
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const { generateSessionNumber } = require('../utils/helpers');
 const logger = require('../utils/logger');
 

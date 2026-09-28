@@ -4,7 +4,7 @@
  * Database operations for tables table.
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const { generateQRToken } = require('../utils/helpers');
 const logger = require('../utils/logger');
 

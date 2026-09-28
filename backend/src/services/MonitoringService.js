@@ -6,7 +6,7 @@
  * Requirements: Reliability NFR 1
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const logger = require('../utils/logger');
 
 class MonitoringService {

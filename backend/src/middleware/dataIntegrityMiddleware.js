@@ -10,7 +10,7 @@
  * Requirements: 19.1, 19.2, 19.3, 19.4, 19.5
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const TableTokenService = require('../services/TableTokenService');
 const logger = require('../utils/logger');
 const { InvalidTokenError, InvalidStateError, NotFoundError } = require('../utils/errorHandler');

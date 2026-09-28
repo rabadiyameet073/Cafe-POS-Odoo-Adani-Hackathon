@@ -1,4 +1,4 @@
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const TableTokenService = require('../services/TableTokenService');
 const { formatResponse } = require('../utils/helpers');
 const { catchAsync, NotFoundError, ValidationError, AuthorizationError } = require('../utils/errorHandler');

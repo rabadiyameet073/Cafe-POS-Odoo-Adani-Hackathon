@@ -4,7 +4,7 @@
  * Database operations for floors table.
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const logger = require('../utils/logger');
 
 const Floor = {

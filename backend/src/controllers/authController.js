@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const { generateToken } = require('../services/tokenService');
 const { formatResponse } = require('../utils/helpers');
 const { catchAsync, ValidationError, ConflictError, AuthenticationError, NotFoundError } = require('../utils/errorHandler');

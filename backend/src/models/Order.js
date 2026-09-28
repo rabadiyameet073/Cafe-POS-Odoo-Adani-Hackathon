@@ -4,7 +4,7 @@
  * Database operations for orders table.
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const { generateOrderNumber } = require('../utils/helpers');
 const logger = require('../utils/logger');
 

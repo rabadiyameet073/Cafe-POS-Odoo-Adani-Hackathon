@@ -7,7 +7,7 @@
  * Requirements: 3.3, 9.3, 19.1
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const TableTokenService = require('./TableTokenService');
 const logger = require('../utils/logger');
 const { createOrderTransaction } = require('../utils/transactionHelper');

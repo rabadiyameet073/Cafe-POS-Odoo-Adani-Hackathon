@@ -10,7 +10,7 @@
  *   - approvePaymentTransaction: Atomically approves a payment + updates the order
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const logger = require('./logger');
 
 /**

@@ -19,9 +19,9 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 const io = initializeSocketIO(server);
 
-// Make io accessible throughout the app and to Supabase adapter
+// Make io accessible throughout the app and to MongoDB realtime broadcaster
 app.set('io', io);
-const { setSocketIO } = require('./config/supabase');
+const { setSocketIO } = require('./config/db');
 setSocketIO(io);
 
 // Get port from environment

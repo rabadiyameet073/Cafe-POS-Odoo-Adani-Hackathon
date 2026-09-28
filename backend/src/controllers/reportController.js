@@ -1,4 +1,4 @@
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const { formatResponse, parseDateRange } = require('../utils/helpers');
 const { catchAsync, ValidationError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');

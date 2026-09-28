@@ -13,7 +13,7 @@
  */
 
 const crypto = require('crypto');
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const logger = require('../utils/logger');
 
 // Secret key for token signing (should be in environment variables)

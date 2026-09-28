@@ -6,7 +6,7 @@
  * Requirements: 2.2, 2.3, 13.1, 13.2
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const TableTokenService = require('./TableTokenService');
 const logger = require('../utils/logger');
 

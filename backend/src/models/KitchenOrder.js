@@ -4,7 +4,7 @@
  * Database operations for kitchen_orders table.
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const logger = require('../utils/logger');
 
 const KitchenOrder = {

@@ -7,7 +7,7 @@
  * Requirements: 11.1, 11.2, 13.1, 14.1, 14.2, 14.3
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const TableService = require('./TableService');
 const logger = require('../utils/logger');
 const GracefulDegradationService = require('./GracefulDegradationService');

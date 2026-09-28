@@ -7,7 +7,7 @@
  * Requirements: 8.1, 9.1, 9.3
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const OrderService = require('./OrderService');
 const logger = require('../utils/logger');
 

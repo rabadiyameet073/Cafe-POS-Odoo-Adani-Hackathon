@@ -7,7 +7,7 @@
  * Performance NFR 1, 2, 3
  */
 
-const { supabase } = require('../config/supabase');
+const { supabase } = require('../config/db');
 const logger = require('./logger');
 
 /**

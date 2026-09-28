@@ -374,7 +374,7 @@ const createOrderFromCart = catchAsync(async (req, res) => {
     }
 
     // Get cart items
-    const { supabase } = require('../config/supabase');
+    const { supabase } = require('../config/db');
     const { data: cartItems, error: cartError } = await supabase
         .from('cart_items')
         .select(`
