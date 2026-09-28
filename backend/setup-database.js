@@ -2,12 +2,12 @@
  * Database Setup Script
  * 
  * This script helps you:
- * 1. Test Supabase connection
+ * 1. Test MongoDB connection
  * 2. Create demo users
  * 3. Verify database setup
  */
 
-const { supabase, testConnection } = require('./src/config/supabase');
+const { db, testConnection } = require('./src/config/db');
 const bcrypt = require('bcryptjs');
 const logger = require('./src/utils/logger');
 
@@ -53,7 +53,7 @@ async function setupDatabase() {
     
     if (!isConnected) {
         console.error('\n❌ Failed to connect to database');
-        console.error('Please check your .env file and Supabase credentials\n');
+        console.error('Please check your .env file and MongoDB credentials\n');
         process.exit(1);
     }
 
@@ -61,14 +61,14 @@ async function setupDatabase() {
 
     // Step 2: Check if tables exist
     console.log('Step 2: Checking database tables...');
-    const { data: tables, error: tablesError } = await supabase
+    const { data: tables, error: tablesError } = await db
         .from('users')
         .select('id')
         .limit(1);
 
     if (tablesError && tablesError.code === '42P01') {
         console.error('\n❌ Tables not found!');
-        console.error('Please run the schema.sql file in your Supabase SQL Editor first\n');
+        console.error('Please run the schema.sql file in your MongoDB SQL Editor first\n');
         console.error('File location: database/schema.sql\n');
         process.exit(1);
     }
@@ -81,7 +81,7 @@ async function setupDatabase() {
     for (const user of demoUsers) {
         try {
             // Check if user already exists
-            const { data: existingUser } = await supabase
+            const { data: existingUser } = await db
                 .from('users')
                 .select('id, email')
                 .eq('email', user.email)
@@ -97,7 +97,7 @@ async function setupDatabase() {
             const password_hash = await bcrypt.hash(user.password, salt);
 
             // Create user
-            const { data: newUser, error } = await supabase
+            const { data: newUser, error } = await db
                 .from('users')
                 .insert({
                     email: user.email,
@@ -123,7 +123,7 @@ async function setupDatabase() {
     // Step 4: Verify setup
     console.log('\nStep 4: Verifying setup...');
     
-    const { data: userCount, error: countError } = await supabase
+    const { data: userCount, error: countError } = await db
         .from('users')
         .select('id', { count: 'exact', head: true });
 
