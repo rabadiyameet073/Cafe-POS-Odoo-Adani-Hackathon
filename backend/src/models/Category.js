@@ -4,7 +4,7 @@
  * Database operations for product_categories table.
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 const Category = {
@@ -12,7 +12,7 @@ const Category = {
      * Find all categories with optional filters
      */
     async findAll(filters = {}) {
-        let query = supabase
+        let query = db
             .from('product_categories')
             .select('*')
             .order('display_order', { ascending: true });
@@ -35,7 +35,7 @@ const Category = {
      * Find category by ID
      */
     async findById(id) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('product_categories')
             .select('*')
             .eq('id', id)
@@ -49,7 +49,7 @@ const Category = {
      * Find category by name
      */
     async findByName(name) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('product_categories')
             .select('*')
             .eq('name', name)
@@ -67,7 +67,7 @@ const Category = {
 
         // Get product counts for each category
         for (const category of categories) {
-            const { count } = await supabase
+            const { count } = await db
                 .from('products')
                 .select('id', { count: 'exact', head: true })
                 .eq('category_id', category.id)
@@ -83,7 +83,7 @@ const Category = {
      * Create a new category
      */
     async create(categoryData) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('product_categories')
             .insert(categoryData)
             .select('*')
@@ -97,7 +97,7 @@ const Category = {
      * Update a category
      */
     async update(id, updates) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('product_categories')
             .update(updates)
             .eq('id', id)
@@ -119,7 +119,7 @@ const Category = {
      * Get next display order
      */
     async getNextDisplayOrder() {
-        const { data } = await supabase
+        const { data } = await db
             .from('product_categories')
             .select('display_order')
             .order('display_order', { ascending: false })
