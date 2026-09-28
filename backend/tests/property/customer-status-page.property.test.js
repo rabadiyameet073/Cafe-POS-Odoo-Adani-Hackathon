@@ -11,7 +11,7 @@
 
 const fc = require('fast-check');
 const {
-  supabase,
+  db,
   createTestUser,
   createTestFloor,
   createTestTable,
@@ -71,7 +71,7 @@ describe('Property-Based Tests: Customer Status Page', () => {
             const tableToken = selectResult.tableToken;
 
             // Add item to cart
-            const { error: cartError } = await supabase
+            const { error: cartError } = await db
               .from('cart_items')
               .insert({
                 table_token: tableToken,
@@ -82,7 +82,7 @@ describe('Property-Based Tests: Customer Status Page', () => {
             expect(cartError).toBeNull();
 
             // Create order
-            const { data: cartItems } = await supabase
+            const { data: cartItems } = await db
               .from('cart_items')
               .select('*, products(name, price, tax_percentage)')
               .eq('table_token', tableToken);
@@ -102,7 +102,7 @@ describe('Property-Based Tests: Customer Status Page', () => {
             expect(paymentResult.success).toBe(true);
 
             // Assert: Verify cashier payment request has all required fields
-            const { data: cashierRequest, error: requestError } = await supabase
+            const { data: cashierRequest, error: requestError } = await db
               .from('cashier_payment_requests')
               .select('*')
               .eq('payment_id', paymentResult.paymentId)
@@ -125,11 +125,11 @@ describe('Property-Based Tests: Customer Status Page', () => {
             expect(cashierRequest.total_amount).toBeGreaterThan(0);
 
             // Cleanup
-            await supabase.from('cashier_payment_requests').delete().eq('payment_id', paymentResult.paymentId);
-            await supabase.from('payments').delete().eq('id', paymentResult.paymentId);
-            await supabase.from('order_items').delete().eq('order_id', orderId);
-            await supabase.from('orders').delete().eq('id', orderId);
-            await supabase.from('cart_items').delete().eq('table_token', tableToken);
+            await db.from('cashier_payment_requests').delete().eq('payment_id', paymentResult.paymentId);
+            await db.from('payments').delete().eq('id', paymentResult.paymentId);
+            await db.from('order_items').delete().eq('order_id', orderId);
+            await db.from('orders').delete().eq('id', orderId);
+            await db.from('cart_items').delete().eq('table_token', tableToken);
             await TableService.releaseTable(testTableId, 'test cleanup');
           }
         ),
@@ -150,7 +150,7 @@ describe('Property-Based Tests: Customer Status Page', () => {
             expect(selectResult.success).toBe(true);
             const tableToken = selectResult.tableToken;
 
-            const { error: cartError } = await supabase
+            const { error: cartError } = await db
               .from('cart_items')
               .insert({
                 table_token: tableToken,
@@ -160,7 +160,7 @@ describe('Property-Based Tests: Customer Status Page', () => {
               });
             expect(cartError).toBeNull();
 
-            const { data: cartItems } = await supabase
+            const { data: cartItems } = await db
               .from('cart_items')
               .select('*, products(name, price, tax_percentage)')
               .eq('table_token', tableToken);
@@ -174,19 +174,19 @@ describe('Property-Based Tests: Customer Status Page', () => {
             await PaymentService.approveCashPayment(paymentResult.paymentId, cashierId, 'Test Cashier');
 
             // Update kitchen order status
-            const { data: kitchenOrder } = await supabase
+            const { data: kitchenOrder } = await db
               .from('kitchen_orders')
               .select('*')
               .eq('order_id', orderId)
               .single();
 
-            await supabase
+            await db
               .from('kitchen_orders')
               .update({ status: kitchenStatus })
               .eq('id', kitchenOrder.id);
 
             // Execute: Get order for customer status page
-            const { data: order, error: orderError } = await supabase
+            const { data: order, error: orderError } = await db
               .from('orders')
               .select(`
                 *,
@@ -212,11 +212,11 @@ describe('Property-Based Tests: Customer Status Page', () => {
             expect(['Order Received', 'Preparing', 'Ready']).toContain(customerStatus);
 
             // Cleanup
-            await supabase.from('kitchen_orders').delete().eq('order_id', orderId);
-            await supabase.from('payments').delete().eq('order_id', orderId);
-            await supabase.from('order_items').delete().eq('order_id', orderId);
-            await supabase.from('orders').delete().eq('id', orderId);
-            await supabase.from('cart_items').delete().eq('table_token', tableToken);
+            await db.from('kitchen_orders').delete().eq('order_id', orderId);
+            await db.from('payments').delete().eq('order_id', orderId);
+            await db.from('order_items').delete().eq('order_id', orderId);
+            await db.from('orders').delete().eq('id', orderId);
+            await db.from('cart_items').delete().eq('table_token', tableToken);
             await TableService.releaseTable(testTableId, 'test cleanup');
           }
         ),
@@ -240,7 +240,7 @@ describe('Property-Based Tests: Customer Status Page', () => {
             expect(selectResult.success).toBe(true);
             const tableToken = selectResult.tableToken;
 
-            const { error: cartError } = await supabase
+            const { error: cartError } = await db
               .from('cart_items')
               .insert({
                 table_token: tableToken,
@@ -250,7 +250,7 @@ describe('Property-Based Tests: Customer Status Page', () => {
               });
             expect(cartError).toBeNull();
 
-            const { data: cartItems } = await supabase
+            const { data: cartItems } = await db
               .from('cart_items')
               .select('*, products(name, price, tax_percentage)')
               .eq('table_token', tableToken);
@@ -260,7 +260,7 @@ describe('Property-Based Tests: Customer Status Page', () => {
             const orderId = orderResult.orderId;
 
             // Execute: Get order for customer status page
-            const { data: order, error: orderError } = await supabase
+            const { data: order, error: orderError } = await db
               .from('orders')
               .select('*')
               .eq('id', orderId)
@@ -283,9 +283,9 @@ describe('Property-Based Tests: Customer Status Page', () => {
             expect(orderTime.getTime()).toBeGreaterThan(0);
 
             // Cleanup
-            await supabase.from('order_items').delete().eq('order_id', orderId);
-            await supabase.from('orders').delete().eq('id', orderId);
-            await supabase.from('cart_items').delete().eq('table_token', tableToken);
+            await db.from('order_items').delete().eq('order_id', orderId);
+            await db.from('orders').delete().eq('id', orderId);
+            await db.from('cart_items').delete().eq('table_token', tableToken);
             await TableService.releaseTable(testTableId, 'test cleanup');
           }
         ),
