@@ -6,7 +6,7 @@
  * Requirements: Security NFR 3, 14.5
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 /**
@@ -15,7 +15,7 @@ const logger = require('../utils/logger');
  */
 async function logAdminAction(actionData) {
     try {
-        const { error } = await supabase
+        const { error } = await db
             .from('admin_logs')
             .insert({
                 admin_id: actionData.adminId,
@@ -139,7 +139,7 @@ function sanitizeBody(body) {
  */
 async function getAuditLogs(filters = {}) {
     try {
-        let query = supabase
+        let query = db
             .from('admin_logs')
             .select(`
                 *,
