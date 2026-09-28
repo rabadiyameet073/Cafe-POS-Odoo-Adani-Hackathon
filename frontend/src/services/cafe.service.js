@@ -1,4 +1,4 @@
-import { supabase } from './db.service'
+import { db } from './db.service'
 
 // ─── UPI Configuration ───
 const UPI_ID = 'rabadiyameet09@okaxis'
@@ -27,7 +27,7 @@ function generateOrderNumber() {
 // ═══════════════════════════════════════
 
 export async function getFloors() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('floors')
         .select('*')
         .eq('is_active', true)
@@ -37,7 +37,7 @@ export async function getFloors() {
 }
 
 export async function getTablesByFloor(floorId) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('tables')
         .select('*')
         .eq('floor_id', floorId)
@@ -55,7 +55,7 @@ export async function createTableSession(tableId, floorId, tableNumber) {
     const tableToken = generateToken()
 
     // 1. Create session
-    const { data: session, error: sessionErr } = await supabase
+    const { data: session, error: sessionErr } = await db
         .from('table_sessions')
         .insert({
             table_id: tableId,
@@ -71,7 +71,7 @@ export async function createTableSession(tableId, floorId, tableNumber) {
     if (sessionErr) throw sessionErr
 
     // 2. Mark table as occupied
-    const { error: tableErr } = await supabase
+    const { error: tableErr } = await db
         .from('tables')
         .update({
             status: 'occupied',
@@ -92,7 +92,7 @@ export async function createTableSession(tableId, floorId, tableNumber) {
 // ═══════════════════════════════════════
 
 export async function getCategories() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('product_categories')
         .select('*')
         .eq('is_active', true)
@@ -102,7 +102,7 @@ export async function getCategories() {
 }
 
 export async function getProducts() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('products')
         .select('*, product_categories(name, icon_emoji)')
         .eq('is_available', true)
@@ -118,7 +118,7 @@ export async function getProducts() {
 
 export async function createOrder(tableToken, cartItems, subtotal, taxAmount, totalAmount) {
     // Look up table info from active session
-    const { data: session, error: sessErr } = await supabase
+    const { data: session, error: sessErr } = await db
         .from('table_sessions')
         .select('*, tables!table_sessions_table_id_fkey(id, table_number)')
         .eq('table_token', tableToken)
@@ -132,7 +132,7 @@ export async function createOrder(tableToken, cartItems, subtotal, taxAmount, to
     const tableNumber = session.table_number
 
     // Create order
-    const { data: order, error: orderErr } = await supabase
+    const { data: order, error: orderErr } = await db
         .from('orders')
         .insert({
             order_number: orderNumber,
@@ -164,7 +164,7 @@ export async function createOrder(tableToken, cartItems, subtotal, taxAmount, to
         kitchen_status: 'pending'
     }))
 
-    const { error: itemsErr } = await supabase
+    const { error: itemsErr } = await db
         .from('order_items')
         .insert(orderItems)
 
@@ -195,7 +195,7 @@ export async function createPayment(orderId, method, amount, tableToken, tableNu
         paymentData.upi_expires_at = new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 min
     }
 
-    const { data: payment, error } = await supabase
+    const { data: payment, error } = await db
         .from('payments')
         .insert(paymentData)
         .select()
@@ -204,7 +204,7 @@ export async function createPayment(orderId, method, amount, tableToken, tableNu
     if (error) throw error
 
     // Update order status
-    await supabase
+    await db
         .from('orders')
         .update({
             status: 'payment_requested',
@@ -238,7 +238,7 @@ async function startTimerAndKitchen(orderId, tableToken) {
     const timerEnd = new Date(now.getTime() + TIMER_MINUTES * 60 * 1000)
 
     // Update order → paid / received
-    await supabase.from('orders')
+    await db.from('orders')
         .update({
             status: 'received',
             payment_status: 'paid',
@@ -248,7 +248,7 @@ async function startTimerAndKitchen(orderId, tableToken) {
         .eq('id', orderId)
 
     // Get order details for kitchen
-    const { data: order } = await supabase
+    const { data: order } = await db
         .from('orders')
         .select('*, order_items(*)')
         .eq('id', orderId)
@@ -256,7 +256,7 @@ async function startTimerAndKitchen(orderId, tableToken) {
 
     if (order) {
         // Check if kitchen order already exists (DB trigger may have created it)
-        const { data: existingKO } = await supabase
+        const { data: existingKO } = await db
             .from('kitchen_orders')
             .select('id')
             .eq('order_id', order.id)
@@ -272,7 +272,7 @@ async function startTimerAndKitchen(orderId, tableToken) {
             }))
 
             // Create kitchen order
-            await supabase.from('kitchen_orders').insert({
+            await db.from('kitchen_orders').insert({
                 order_id: order.id,
                 order_number: order.order_number,
                 table_number: order.table_number,
@@ -286,7 +286,7 @@ async function startTimerAndKitchen(orderId, tableToken) {
     }
 
     // Start 39-min timer on the session
-    const { data: session } = await supabase
+    const { data: session } = await db
         .from('table_sessions')
         .select('id, table_id')
         .eq('table_token', tableToken)
@@ -295,7 +295,7 @@ async function startTimerAndKitchen(orderId, tableToken) {
 
     if (session) {
         // Update session timer
-        await supabase.from('table_sessions')
+        await db.from('table_sessions')
             .update({
                 timer_started_at: now.toISOString(),
                 timer_ends_at: timerEnd.toISOString(),
@@ -305,7 +305,7 @@ async function startTimerAndKitchen(orderId, tableToken) {
             .eq('id', session.id)
 
         // Update table with occupied_until + occupied_since
-        await supabase.from('tables')
+        await db.from('tables')
             .update({
                 occupied_since: now.toISOString(),
                 occupied_until: timerEnd.toISOString(),
@@ -314,7 +314,7 @@ async function startTimerAndKitchen(orderId, tableToken) {
             .eq('id', session.table_id)
 
         // Add timer log entry
-        await supabase.from('table_timer_logs').insert({
+        await db.from('table_timer_logs').insert({
             table_id: session.table_id,
             session_id: session.id,
             table_token: tableToken,
@@ -328,7 +328,7 @@ async function startTimerAndKitchen(orderId, tableToken) {
 
 // Mark UPI payment as completed (user clicked "I've Paid")
 export async function completeUPIPayment(paymentId, orderId) {
-    const { error } = await supabase
+    const { error } = await db
         .from('payments')
         .update({
             status: 'completed',
@@ -341,7 +341,7 @@ export async function completeUPIPayment(paymentId, orderId) {
     if (error) throw error
 
     // Get table token from order
-    const { data: order } = await supabase.from('orders').select('table_token').eq('id', orderId).single()
+    const { data: order } = await db.from('orders').select('table_token').eq('id', orderId).single()
     if (order) await startTimerAndKitchen(orderId, order.table_token)
 }
 
@@ -357,7 +357,7 @@ export async function createCashierRequest(paymentId, orderId, tableToken, table
         line_total: item.price * item.quantity
     }))
 
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('cashier_payment_requests')
         .insert({
             payment_id: paymentId,
@@ -376,7 +376,7 @@ export async function createCashierRequest(paymentId, orderId, tableToken, table
 }
 
 export async function getPendingCashierRequests() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('cashier_payment_requests')
         .select('*')
         .eq('status', 'pending')
@@ -389,7 +389,7 @@ export async function approveCashierRequest(requestId, cashierName) {
     const now = new Date().toISOString()
 
     // 1. Get the request
-    const { data: req, error: reqErr } = await supabase
+    const { data: req, error: reqErr } = await db
         .from('cashier_payment_requests')
         .select('*')
         .eq('id', requestId)
@@ -398,7 +398,7 @@ export async function approveCashierRequest(requestId, cashierName) {
     if (reqErr || !req) throw new Error('Request not found')
 
     // 2. Approve the request
-    const { error: updateErr } = await supabase
+    const { error: updateErr } = await db
         .from('cashier_payment_requests')
         .update({
             status: 'approved',
@@ -410,7 +410,7 @@ export async function approveCashierRequest(requestId, cashierName) {
     if (updateErr) throw updateErr
 
     // 3. Update payment
-    const { error: payErr } = await supabase
+    const { error: payErr } = await db
         .from('payments')
         .update({
             status: 'approved',
@@ -435,7 +435,7 @@ export async function autoFreeExpiredTables() {
     const now = new Date().toISOString()
 
     // Find sessions where timer has expired
-    const { data: expired } = await supabase
+    const { data: expired } = await db
         .from('table_sessions')
         .select('id, table_id, table_token')
         .eq('status', 'active')
@@ -446,7 +446,7 @@ export async function autoFreeExpiredTables() {
 
     for (const session of expired) {
         // End the session
-        await supabase.from('table_sessions')
+        await db.from('table_sessions')
             .update({
                 status: 'expired',
                 session_end: now,
@@ -456,7 +456,7 @@ export async function autoFreeExpiredTables() {
             .eq('id', session.id)
 
         // Free the table
-        await supabase.from('tables')
+        await db.from('tables')
             .update({
                 status: 'available',
                 qr_code_token: null,
@@ -474,7 +474,7 @@ export async function autoFreeExpiredTables() {
 export async function rejectCashierRequest(requestId, reason = '') {
     const now = new Date().toISOString()
 
-    const { data: req, error: reqErr } = await supabase
+    const { data: req, error: reqErr } = await db
         .from('cashier_payment_requests')
         .select('*')
         .eq('id', requestId)
@@ -482,12 +482,12 @@ export async function rejectCashierRequest(requestId, reason = '') {
 
     if (reqErr || !req) throw new Error('Request not found')
 
-    await supabase
+    await db
         .from('cashier_payment_requests')
         .update({ status: 'rejected', responded_at: now })
         .eq('id', requestId)
 
-    await supabase
+    await db
         .from('payments')
         .update({
             status: 'rejected',
@@ -497,7 +497,7 @@ export async function rejectCashierRequest(requestId, reason = '') {
         })
         .eq('id', req.payment_id)
 
-    await supabase
+    await db
         .from('orders')
         .update({
             status: 'cancelled',
@@ -513,7 +513,7 @@ export async function rejectCashierRequest(requestId, reason = '') {
 // ═══════════════════════════════════════
 
 export async function getOrdersByToken(tableToken) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('orders')
         .select('*, order_items(*)')
         .eq('table_token', tableToken)
@@ -524,7 +524,7 @@ export async function getOrdersByToken(tableToken) {
 }
 
 export async function getKitchenOrderByOrderId(orderId) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('kitchen_orders')
         .select('*')
         .eq('order_id', orderId)
@@ -534,7 +534,7 @@ export async function getKitchenOrderByOrderId(orderId) {
 }
 
 export async function getSessionByToken(tableToken) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('table_sessions')
         .select('*')
         .eq('table_token', tableToken)
@@ -549,7 +549,7 @@ export async function getSessionByToken(tableToken) {
 // ═══════════════════════════════════════
 
 export async function getActiveKitchenOrders() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('kitchen_orders')
         .select('*')
         .in('status', ['received', 'preparing', 'ready'])
@@ -569,7 +569,7 @@ export async function updateKitchenOrderStatus(kitchenOrderId, newStatus) {
         updates.served_at = new Date().toISOString()
     }
 
-    const { error } = await supabase
+    const { error } = await db
         .from('kitchen_orders')
         .update(updates)
         .eq('id', kitchenOrderId)
@@ -577,7 +577,7 @@ export async function updateKitchenOrderStatus(kitchenOrderId, newStatus) {
     if (error) throw error
 
     // Also update the parent order status
-    const { data: ko } = await supabase
+    const { data: ko } = await db
         .from('kitchen_orders')
         .select('order_id')
         .eq('id', kitchenOrderId)
@@ -590,7 +590,7 @@ export async function updateKitchenOrderStatus(kitchenOrderId, newStatus) {
                     : null
 
         if (orderStatus) {
-            await supabase
+            await db
                 .from('orders')
                 .update({ status: orderStatus, updated_at: new Date().toISOString() })
                 .eq('id', ko.order_id)
@@ -603,7 +603,7 @@ export async function updateKitchenOrderStatus(kitchenOrderId, newStatus) {
 // ═══════════════════════════════════════
 
 export async function getAllTablesWithTimers() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('tables')
         .select('*, floors(name), table_sessions!table_sessions_table_id_fkey(id, table_token, timer_started_at, timer_ends_at, timer_status, session_start, status)')
         .eq('is_active', true)
@@ -629,7 +629,7 @@ export async function forceFreeTaTable(tableId, sessionId) {
     const now = new Date().toISOString()
 
     if (sessionId) {
-        await supabase
+        await db
             .from('table_sessions')
             .update({
                 status: 'force_freed',
@@ -640,7 +640,7 @@ export async function forceFreeTaTable(tableId, sessionId) {
             .eq('id', sessionId)
     }
 
-    await supabase
+    await db
         .from('tables')
         .update({
             status: 'available',
@@ -654,7 +654,7 @@ export async function forceFreeTaTable(tableId, sessionId) {
 }
 
 export async function extendTableTimer(sessionId, extraMinutes = 15) {
-    const { data: session, error: sessErr } = await supabase
+    const { data: session, error: sessErr } = await db
         .from('table_sessions')
         .select('*')
         .eq('id', sessionId)
@@ -666,7 +666,7 @@ export async function extendTableTimer(sessionId, extraMinutes = 15) {
     const newEnd = new Date(currentEnd.getTime() + extraMinutes * 60 * 1000)
     const now = new Date().toISOString()
 
-    await supabase
+    await db
         .from('table_sessions')
         .update({
             timer_ends_at: newEnd.toISOString(),
@@ -675,7 +675,7 @@ export async function extendTableTimer(sessionId, extraMinutes = 15) {
         })
         .eq('id', sessionId)
 
-    await supabase
+    await db
         .from('tables')
         .update({
             occupied_until: newEnd.toISOString(),
@@ -689,7 +689,7 @@ export async function extendTableTimer(sessionId, extraMinutes = 15) {
 // ═══════════════════════════════════════
 
 export async function getAllPayments() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('payments')
         .select('*, orders(order_number, table_number, table_token, total_amount, status)')
         .order('created_at', { ascending: false })
@@ -704,10 +704,10 @@ export async function getAllPayments() {
 
 export async function getDashboardStats() {
     const [tables, orders, payments, sessions] = await Promise.all([
-        supabase.from('tables').select('status', { count: 'exact' }).eq('is_active', true),
-        supabase.from('orders').select('status, total_amount').eq('is_deleted', false).gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
-        supabase.from('payments').select('status, amount, payment_method').gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
-        supabase.from('table_sessions').select('status').eq('status', 'active')
+        db.from('tables').select('status', { count: 'exact' }).eq('is_active', true),
+        db.from('orders').select('status, total_amount').eq('is_deleted', false).gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
+        db.from('payments').select('status, amount, payment_method').gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
+        db.from('table_sessions').select('status').eq('status', 'active')
     ])
 
     const tablesData = tables.data || []
@@ -732,7 +732,7 @@ export async function getDashboardStats() {
 // ═══════════════════════════════════════
 
 export async function submitFeedback(feedbackData) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('customer_feedback')
         .insert({
             table_token: feedbackData.table_token,
@@ -759,7 +759,7 @@ export async function submitFeedback(feedbackData) {
 // ═══════════════════════════════════════
 
 export async function getAllFeedback() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('customer_feedback')
         .select('*')
         .order('created_at', { ascending: false })
