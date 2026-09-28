@@ -7,7 +7,7 @@
  * Requirements: 18.2
  */
 
-import { reconnectAllSubscriptions } from '../services/supabase.service'
+import { reconnectAllSubscriptions } from '../services/db.service'
 import { API_URL } from './constants'
 
 /**

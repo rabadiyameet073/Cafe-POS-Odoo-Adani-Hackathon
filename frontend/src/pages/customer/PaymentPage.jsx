@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CustomerLayout from '../../components/layouts/CustomerLayout'
 import { createOrder, createPayment, createCashierRequest, completeUPIPayment, buildUPIString, getQRCodeURL } from '../../services/cafe.service'
-import { subscribeToTable, unsubscribeFromChannel } from '../../services/supabase.service'
+import { subscribeToTable, unsubscribeFromChannel } from '../../services/db.service'
 import { showToast } from '../../components/Toast'
 
 const PaymentPage = () => {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../utils/api'
-import { subscribeToTable, unsubscribeFromChannel } from '../../services/supabase.service'
+import { subscribeToTable, unsubscribeFromChannel } from '../../services/db.service'
 import Loading from '../Loading'
 import Toast from '../Toast'
 import Icon from '../Icons'

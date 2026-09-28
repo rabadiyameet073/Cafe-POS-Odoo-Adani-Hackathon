@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { floorService } from '../../services/api.service'
-import { subscribeToTable, unsubscribeFromChannel, invalidateCache } from '../../services/supabase.service'
+import { subscribeToTable, unsubscribeFromChannel, invalidateCache } from '../../services/db.service'
 import { useCachedData } from '../../hooks/useCachedData'
 import Loading from '../Loading'
 import Toast from '../Toast'

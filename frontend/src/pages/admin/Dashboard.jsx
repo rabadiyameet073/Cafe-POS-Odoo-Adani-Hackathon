@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import AdminLayout from '../../components/layouts/AdminLayout'
 import { getDashboardStats } from '../../services/cafe.service'
-import { subscribeToTable, unsubscribeFromChannel } from '../../services/supabase.service'
+import { subscribeToTable, unsubscribeFromChannel } from '../../services/db.service'
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null)

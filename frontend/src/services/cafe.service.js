@@ -1,4 +1,4 @@
-import { supabase } from './supabase.service'
+import { supabase } from './db.service'
 
 // ─── UPI Configuration ───
 const UPI_ID = 'rabadiyameet09@okaxis'

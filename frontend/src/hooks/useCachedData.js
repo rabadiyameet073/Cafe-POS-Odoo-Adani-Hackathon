@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getCachedData, invalidateCache } from '../services/supabase.service'
+import { getCachedData, invalidateCache } from '../services/db.service'
 
 /**
  * Custom hook for using cached static data

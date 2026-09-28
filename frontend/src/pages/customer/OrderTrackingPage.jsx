@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CustomerLayout from '../../components/layouts/CustomerLayout'
 import { getOrdersByToken, getKitchenOrderByOrderId, getSessionByToken } from '../../services/cafe.service'
-import { subscribeToTable, unsubscribeFromChannel } from '../../services/supabase.service'
+import { subscribeToTable, unsubscribeFromChannel } from '../../services/db.service'
 import Loading from '../../components/Loading'
 
 const OrderTrackingPage = () => {

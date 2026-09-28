@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import AdminLayout from '../../components/layouts/AdminLayout'
 import { reportService } from '../../services/api.service'
-import { supabase } from '../../services/supabase.service'
+import { supabase } from '../../services/db.service'
 import Loading from '../../components/Loading'
 import { showToast } from '../../components/Toast'
 import Icon from '../../components/Icons'

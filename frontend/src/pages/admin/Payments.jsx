@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import AdminLayout from '../../components/layouts/AdminLayout'
 import { getAllPayments } from '../../services/cafe.service'
-import { subscribeToTable, unsubscribeFromChannel } from '../../services/supabase.service'
+import { subscribeToTable, unsubscribeFromChannel } from '../../services/db.service'
 import Loading from '../../components/Loading'
 import Icon from '../../components/Icons'
 import { showToast } from '../../components/Toast'

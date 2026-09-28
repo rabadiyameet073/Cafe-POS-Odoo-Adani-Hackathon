@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import KitchenLayout from '../../components/layouts/KitchenLayout'
 import { getActiveKitchenOrders, updateKitchenOrderStatus } from '../../services/cafe.service'
-import { subscribeToTable, unsubscribeFromChannel } from '../../services/supabase.service'
+import { subscribeToTable, unsubscribeFromChannel } from '../../services/db.service'
 import { showToast } from '../../components/Toast'
 
 const Display = () => {

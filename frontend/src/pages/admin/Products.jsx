@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import AdminLayout from '../../components/layouts/AdminLayout'
 import { productService, categoryService } from '../../services/api.service'
 import { getProducts as getProductsDB, getCategories as getCategoriesDB } from '../../services/cafe.service'
-import { supabase } from '../../services/supabase.service'
+import { supabase } from '../../services/db.service'
 import Loading from '../../components/Loading'
 import { showToast } from '../../components/Toast'
 

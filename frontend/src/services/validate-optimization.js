@@ -10,7 +10,7 @@ import {
   invalidateCache,
   getSubscriptionStatus,
   getConnectionPoolStats
-} from './supabase.service.js'
+} from './db.service.js'
 
 export const validateOptimizations = async () => {
   console.log('🔍 Validating Subscription Optimizations...\n')

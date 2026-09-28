@@ -7,7 +7,7 @@ import {
   clearAllCaches,
   getSubscriptionStatus,
   getConnectionPoolStats
-} from './supabase.service'
+} from './db.service'
 
 // Mock Supabase client
 vi.mock('@supabase/supabase-js', () => ({
