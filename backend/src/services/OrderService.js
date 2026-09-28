@@ -7,7 +7,7 @@
  * Requirements: 3.3, 9.3, 19.1
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const TableTokenService = require('./TableTokenService');
 const logger = require('../utils/logger');
 const { createOrderTransaction } = require('../utils/transactionHelper');
@@ -28,7 +28,7 @@ class OrderService {
         const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
-        const { count, error } = await supabase
+        const { count, error } = await db
             .from('orders')
             .select('*', { count: 'exact', head: true })
             .gte('created_at', startOfDay.toISOString())
@@ -142,7 +142,7 @@ class OrderService {
             const { order } = transactionResult.result;
 
             // Clear cart
-            await supabase
+            await db
                 .from('cart_items')
                 .delete()
                 .eq('table_token', tableToken);
@@ -179,7 +179,7 @@ class OrderService {
             const now = new Date().toISOString();
 
             // Get current order
-            const { data: order, error: fetchError } = await supabase
+            const { data: order, error: fetchError } = await db
                 .from('orders')
                 .select('status')
                 .eq('id', orderId)
@@ -211,7 +211,7 @@ class OrderService {
                 updateData.cancelled_at = now;
             }
 
-            const { error: updateError } = await supabase
+            const { error: updateError } = await db
                 .from('orders')
                 .update(updateData)
                 .eq('id', orderId);
@@ -225,7 +225,7 @@ class OrderService {
             }
 
             // Log status change to history
-            const { error: historyError } = await supabase
+            const { error: historyError } = await db
                 .from('order_status_history')
                 .insert({
                     order_id: orderId,
@@ -274,7 +274,7 @@ class OrderService {
                 };
             }
 
-            const { data: orders, error } = await supabase
+            const { data: orders, error } = await db
                 .from('orders')
                 .select(`
                     *,
@@ -312,7 +312,7 @@ class OrderService {
      */
     async getOrderById(orderId) {
         try {
-            const { data: order, error } = await supabase
+            const { data: order, error } = await db
                 .from('orders')
                 .select(`
                     *,
@@ -348,7 +348,7 @@ class OrderService {
      */
     async getOrderStatusHistory(orderId) {
         try {
-            const { data: history, error } = await supabase
+            const { data: history, error } = await db
                 .from('order_status_history')
                 .select('*')
                 .eq('order_id', orderId)
