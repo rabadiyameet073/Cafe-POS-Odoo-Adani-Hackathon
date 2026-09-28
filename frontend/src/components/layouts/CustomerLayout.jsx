@@ -355,14 +355,14 @@ const CustomerLayout = ({ children }) => {
               )}
             </div>
 
-            {/* Username + Logout — second from last */}
-            {user && (
+            {/* Logged in customer badge (only for customer role) */}
+            {user && user.role === 'customer' && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: 'rgba(245,166,35,0.08)', border: '1px solid rgba(245,166,35,0.18)' }}>
                 <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: 'var(--accent-primary)', color: 'var(--on-accent-text)' }}>
-                  {user.full_name ? user.full_name[0].toUpperCase() : 'U'}
+                  {user.full_name ? user.full_name[0].toUpperCase() : 'C'}
                 </div>
                 <span className="hidden md:inline text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                  {user.full_name?.split(' ')[0] || user.email}
+                  {user.full_name?.split(' ')[0] || 'Customer'}
                 </span>
                 <button
                   onClick={logout}
@@ -375,6 +375,21 @@ const CustomerLayout = ({ children }) => {
                   </svg>
                 </button>
               </div>
+            )}
+
+            {/* If staff (admin/cashier/kitchen) is viewing customer page, show back to staff portal button instead of misleading admin profile */}
+            {user && ['admin', 'cashier', 'kitchen'].includes(user.role) && (
+              <Link
+                to={`/${user.role}/dashboard`}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all hover:scale-105"
+                style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--accent-primary)', border: '1px solid rgba(245,166,35,0.3)' }}
+                title="Return to Staff Dashboard"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span className="hidden sm:inline">{user.role === 'admin' ? 'Admin Portal' : user.role === 'cashier' ? 'Cashier Portal' : 'Kitchen Portal'}</span>
+              </Link>
             )}
 
             {/* Dark Mode Toggle — last */}

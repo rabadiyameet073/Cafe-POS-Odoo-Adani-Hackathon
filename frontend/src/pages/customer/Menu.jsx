@@ -14,26 +14,52 @@ const FALLBACK_IMAGES = {
   'Classic Espresso': 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=500&auto=format&fit=crop&q=80',
   'Cold Coffee': 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=500&auto=format&fit=crop&q=80',
   'Mango Shake': 'https://images.unsplash.com/photo-1546173159-315724a31696?w=500&auto=format&fit=crop&q=80',
-  'Lemon Soda': 'https://images.unsplash.com/photo-1513558161293-cdaf765ed514?w=500&auto=format&fit=crop&q=80',
+  'Lemon Soda': 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=500&auto=format&fit=crop&q=80',
+  'Fresh Lime Soda': 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=500&auto=format&fit=crop&q=80',
   'Caramel Frappe': 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=500&auto=format&fit=crop&q=80',
+  'Blended Caramel Frappe': 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=500&auto=format&fit=crop&q=80',
+  'Classic Iced Americano': 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=500&auto=format&fit=crop&q=80',
+  'Fresh Mint Mojito': 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=500&auto=format&fit=crop&q=80',
   'Veg Samosa': 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&auto=format&fit=crop&q=80',
   'French Fries': 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=80',
+  'Crispy Peri Peri Fries': 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=80',
   'Sandwich': 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=500&auto=format&fit=crop&q=80',
+  'Grilled Pesto Panini': 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=500&auto=format&fit=crop&q=80',
   'Loaded Nachos': 'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?w=500&auto=format&fit=crop&q=80',
-  'Garlic Bread': 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?w=500&auto=format&fit=crop&q=80',
+  'Loaded Cheesy Nachos': 'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?w=500&auto=format&fit=crop&q=80',
+  'Garlic Bread': 'https://images.unsplash.com/photo-1556008531-57e6eefc7be4?w=500&auto=format&fit=crop&q=80',
+  'Cheese Garlic Bread': 'https://images.unsplash.com/photo-1556008531-57e6eefc7be4?w=500&auto=format&fit=crop&q=80',
   'Veg Biryani': 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=80',
   'Paneer Butter Masala': 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&auto=format&fit=crop&q=80',
   'Dal Makhani': 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500&auto=format&fit=crop&q=80',
   'Veggie Burger': 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=80',
+  'Gourmet Veggie Burger': 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=80',
   'Gulab Jamun': 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=500&auto=format&fit=crop&q=80',
   'Brownie': 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=500&auto=format&fit=crop&q=80',
+  'Sizzling Chocolate Brownie': 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=500&auto=format&fit=crop&q=80',
   'New York Cheesecake': 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=500&auto=format&fit=crop&q=80',
   'Poha': 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=500&auto=format&fit=crop&q=80',
   'Idli Sambar': 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=500&auto=format&fit=crop&q=80',
   'Upma': 'https://images.unsplash.com/photo-1645177628172-a94c1f96e6db?w=500&auto=format&fit=crop&q=80',
-  'Fresh Lime Soda': 'https://images.unsplash.com/photo-1513558161293-cdaf765ed514?w=400',
   'Sprite': 'https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=400',
 };
+
+const resolveProductImage = (product) => {
+  const isCorrupted = product.image_url && (
+    product.image_url.includes('photo-1573140247632') || 
+    product.image_url.includes('photo-1513558161293')
+  )
+  if (!isCorrupted && product.image_url) {
+    return product.image_url
+  }
+  return FALLBACK_IMAGES[product.name] || (
+    product.name?.toLowerCase().includes('garlic bread') 
+      ? 'https://images.unsplash.com/photo-1556008531-57e6eefc7be4?w=500&auto=format&fit=crop&q=80'
+      : product.name?.toLowerCase().includes('soda') || product.name?.toLowerCase().includes('lime')
+        ? 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=500&auto=format&fit=crop&q=80'
+        : ''
+  )
+}
 
 const PlaceholderImage = ({ name }) => (
   <div
@@ -91,6 +117,7 @@ const Menu = () => {
 
   const addToCart = (product) => {
     const existing = cart.find(i => i.product_id === product.id)
+    const cleanImageUrl = resolveProductImage(product)
     let newCart
     if (existing) {
       newCart = cart.map(i => i.product_id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
@@ -99,7 +126,7 @@ const Menu = () => {
         product_id: product.id,
         name: product.name,
         price: Number(product.price),
-        image_url: product.image_url,
+        image_url: cleanImageUrl,
         quantity: 1
       }]
     }
@@ -172,8 +199,8 @@ const Menu = () => {
           {filtered.map(product => {
             const cartItem = cart.find(i => i.product_id === product.id)
             const imgFailed = failedImages.has(product.id)
-            const imageUrl = product.image_url || FALLBACK_IMAGES[product.name]
-            const fallbackUrl = FALLBACK_IMAGES[product.name]
+            const imageUrl = resolveProductImage(product)
+            const fallbackUrl = FALLBACK_IMAGES[product.name] || 'https://images.unsplash.com/photo-1556008531-57e6eefc7be4?w=500&auto=format&fit=crop&q=80'
             return (
               <div key={product.id} className="product-card flex flex-col">
                 <div className="relative overflow-hidden" style={{ borderRadius: '18px 18px 0 0' }}>

@@ -49,6 +49,18 @@ const Cart = () => {
   const total = subtotal + tax
   const itemCount = cart.reduce((s, i) => s + i.quantity, 0)
 
+  const getCleanItemImage = (item) => {
+    if (!item?.image_url || item.image_url.includes('photo-1573140247632') || item.image_url.includes('photo-1513558161293')) {
+      if (item?.name?.toLowerCase().includes('garlic bread')) {
+        return 'https://images.unsplash.com/photo-1556008531-57e6eefc7be4?w=500&auto=format&fit=crop&q=80'
+      }
+      if (item?.name?.toLowerCase().includes('soda') || item?.name?.toLowerCase().includes('lime')) {
+        return 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=500&auto=format&fit=crop&q=80'
+      }
+    }
+    return item?.image_url
+  }
+
   const tableNumber = sessionStorage.getItem('table_number')
 
   return (
@@ -84,8 +96,8 @@ const Cart = () => {
             <div className="lg:col-span-3 space-y-3">
               {cart.map(item => (
                 <div key={item.product_id} className="section-card p-3 sm:p-4 flex gap-3 sm:gap-4">
-                  {item.image_url && (
-                    <img src={item.image_url} alt={item.name} className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl flex-shrink-0"
+                  {getCleanItemImage(item) && (
+                    <img src={getCleanItemImage(item)} alt={item.name} className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl flex-shrink-0"
                       onError={(e) => { e.target.style.display = 'none' }} />
                   )}
                   <div className="flex-1 min-w-0">

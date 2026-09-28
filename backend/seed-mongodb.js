@@ -288,7 +288,7 @@ async function seed() {
             price: 170,
             tax: 5,
             description: 'Toasted baguette with herb garlic butter and bubbling mozzarella cheese.',
-            image_url: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?w=500&auto=format&fit=crop&q=60'
+            image_url: 'https://images.unsplash.com/photo-1556008531-57e6eefc7be4?w=500&auto=format&fit=crop&q=60'
         },
 
         // Sandwiches & Burgers
