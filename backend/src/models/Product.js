@@ -4,7 +4,7 @@
  * Database operations for products and product_variants tables.
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 const Product = {
@@ -12,7 +12,7 @@ const Product = {
      * Find all products with optional filters
      */
     async findAll(filters = {}) {
-        let query = supabase
+        let query = db
             .from('products')
             .select('*, product_categories(id, name, send_to_kitchen)')
             .order('name', { ascending: true });
@@ -39,7 +39,7 @@ const Product = {
      * Find products by category
      */
     async findByCategory(categoryId) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('products')
             .select('*, product_categories(id, name, send_to_kitchen)')
             .eq('category_id', categoryId)
@@ -55,7 +55,7 @@ const Product = {
      * Find product by ID with variants
      */
     async findById(id) {
-        const { data: product, error } = await supabase
+        const { data: product, error } = await db
             .from('products')
             .select('*, product_categories(id, name, send_to_kitchen)')
             .eq('id', id)
@@ -65,7 +65,7 @@ const Product = {
         if (!product) return null;
 
         // Get variants
-        const { data: variants } = await supabase
+        const { data: variants } = await db
             .from('product_variants')
             .select('*')
             .eq('product_id', id)
@@ -87,7 +87,7 @@ const Product = {
         const productIds = products.map(p => p.id);
 
         if (productIds.length > 0) {
-            const { data: allVariants } = await supabase
+            const { data: allVariants } = await db
                 .from('product_variants')
                 .select('*')
                 .in('product_id', productIds)
@@ -106,7 +106,7 @@ const Product = {
      * Create a new product
      */
     async create(productData) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('products')
             .insert(productData)
             .select('*, product_categories(id, name)')
@@ -120,7 +120,7 @@ const Product = {
      * Update a product
      */
     async update(id, updates) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('products')
             .update({ ...updates, updated_at: new Date().toISOString() })
             .eq('id', id)
@@ -154,7 +154,7 @@ const Product = {
      * Get product variants
      */
     async getVariants(productId) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('product_variants')
             .select('*')
             .eq('product_id', productId)
@@ -169,7 +169,7 @@ const Product = {
      * Get variant by ID
      */
     async getVariantById(variantId) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('product_variants')
             .select('*')
             .eq('id', variantId)
@@ -183,7 +183,7 @@ const Product = {
      * Create a product variant
      */
     async createVariant(variantData) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('product_variants')
             .insert(variantData)
             .select('*')
@@ -197,7 +197,7 @@ const Product = {
      * Update a product variant
      */
     async updateVariant(variantId, updates) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('product_variants')
             .update(updates)
             .eq('id', variantId)
