@@ -51,6 +51,18 @@ const Cart = () => {
     }
   }
 
+  const getCleanItemImage = (item) => {
+    if (!item?.image_url || item.image_url.includes('photo-1573140247632') || item.image_url.includes('photo-1513558161293')) {
+      if (item?.name?.toLowerCase().includes('garlic bread')) {
+        return 'https://images.unsplash.com/photo-1556008531-57e6eefc7be4?w=500&auto=format&fit=crop&q=80'
+      }
+      if (item?.name?.toLowerCase().includes('soda') || item?.name?.toLowerCase().includes('lime')) {
+        return 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=500&auto=format&fit=crop&q=80'
+      }
+    }
+    return item?.image_url
+  }
+
   const showToast = (message, type = 'success') => {
     setToast({ message, type })
     setTimeout(() => setToast(null), 3000)
@@ -170,8 +182,8 @@ const Cart = () => {
           <div className="lg:col-span-2 space-y-4">
             {cart.map((item) => (
               <div key={item.product_id} className="section-card p-4 flex gap-4" style={{ border: '1px solid var(--border-subtle)' }}>
-                {item.image_url && (
-                  <img src={item.image_url} alt={item.name} className="w-24 h-24 object-cover rounded-xl" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=No+Image' }} />
+                {getCleanItemImage(item) && (
+                  <img src={getCleanItemImage(item)} alt={item.name} className="w-24 h-24 object-cover rounded-xl" onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=No+Image' }} />
                 )}
                 <div className="flex-1">
                   <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{item.name}</h3>

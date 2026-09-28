@@ -4,6 +4,24 @@ import { productService, categoryService, cartService } from '../../services/api
 import Loading from '../Loading'
 import Toast from '../Toast'
 
+const resolveProductImage = (product) => {
+  if (!product) return ''
+  const isCorrupted = product.image_url && (
+    product.image_url.includes('photo-1573140247632') || 
+    product.image_url.includes('photo-1513558161293')
+  )
+  if (!isCorrupted && product.image_url) {
+    return product.image_url
+  }
+  if (product.name?.toLowerCase().includes('garlic bread')) {
+    return 'https://images.unsplash.com/photo-1556008531-57e6eefc7be4?w=500&auto=format&fit=crop&q=80'
+  }
+  if (product.name?.toLowerCase().includes('soda') || product.name?.toLowerCase().includes('lime')) {
+    return 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=500&auto=format&fit=crop&q=80'
+  }
+  return product.image_url || ''
+}
+
 const MenuBrowser = () => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
@@ -200,9 +218,9 @@ const MenuBrowser = () => {
               className="section-card p-4 hover:scale-[1.02] transition-all duration-300"
               style={{ border: '1px solid var(--border-subtle)' }}
             >
-              {product.image_url && (
+              {resolveProductImage(product) && (
                 <img
-                  src={product.image_url}
+                  src={resolveProductImage(product)}
                   alt={product.name}
                   className="w-full h-44 object-cover rounded-xl mb-4"
                   onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300?text=No+Image' }}

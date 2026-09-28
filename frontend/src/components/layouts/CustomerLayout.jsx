@@ -377,18 +377,18 @@ const CustomerLayout = ({ children }) => {
               </div>
             )}
 
-            {/* If staff (admin/cashier/kitchen) is viewing customer page, show back to staff portal button instead of misleading admin profile */}
+            {/* If staff (admin/cashier/kitchen) is viewing customer page, show back to staff portal button as Exit Preview instead of admin name */}
             {user && ['admin', 'cashier', 'kitchen'].includes(user.role) && (
               <Link
                 to={`/${user.role}/dashboard`}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all hover:scale-105"
                 style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--accent-primary)', border: '1px solid rgba(245,166,35,0.3)' }}
-                title="Return to Staff Dashboard"
+                title="Exit customer preview and return to staff dashboard"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                <span className="hidden sm:inline">{user.role === 'admin' ? 'Admin Portal' : user.role === 'cashier' ? 'Cashier Portal' : 'Kitchen Portal'}</span>
+                <span className="hidden sm:inline">Exit Preview</span>
               </Link>
             )}
 

@@ -3,6 +3,19 @@ const { formatResponse } = require('../utils/helpers');
 const { catchAsync, NotFoundError, ValidationError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 
+function sanitizeProduct(p) {
+    if (!p) return p;
+    const item = typeof p.toObject === 'function' ? p.toObject() : { ...p };
+    const name = (item.name || '').toLowerCase();
+    const img = item.image_url || '';
+    if (img.includes('photo-1573140247632') || name.includes('garlic bread')) {
+        item.image_url = 'https://images.unsplash.com/photo-1556008531-57e6eefc7be4?w=500&auto=format&fit=crop&q=80';
+    } else if (img.includes('photo-1513558161293') || name.includes('lemon soda') || name.includes('lime soda') || name === 'lemon soda') {
+        item.image_url = 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=500&auto=format&fit=crop&q=80';
+    }
+    return item;
+}
+
 const getAllProducts = catchAsync(async (req, res) => {
     const { category_id, is_available, include_variants } = req.query;
 
@@ -17,6 +30,8 @@ const getAllProducts = catchAsync(async (req, res) => {
         products = await Product.findAll(filters);
     }
 
+    products = (products || []).map(sanitizeProduct);
+
     res.status(200).json(formatResponse(true, 'Products retrieved successfully', {
         products,
         count: products.length
@@ -26,7 +41,8 @@ const getAllProducts = catchAsync(async (req, res) => {
 const getProductsByCategory = catchAsync(async (req, res) => {
     const { categoryId } = req.params;
 
-    const products = await Product.findByCategory(categoryId);
+    let products = await Product.findByCategory(categoryId);
+    products = (products || []).map(sanitizeProduct);
 
     res.status(200).json(formatResponse(true, 'Products retrieved successfully', {
         products,
@@ -44,7 +60,7 @@ const getProductById = catchAsync(async (req, res) => {
     }
 
     res.status(200).json(formatResponse(true, 'Product retrieved successfully', {
-        product
+        product: sanitizeProduct(product)
     }));
 });
 
