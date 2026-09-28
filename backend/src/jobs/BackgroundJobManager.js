@@ -10,7 +10,7 @@
 const TimerService = require('../services/TimerService');
 const PaymentService = require('../services/PaymentService');
 const NotificationService = require('../services/NotificationService');
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 class BackgroundJobManager {
@@ -135,7 +135,7 @@ class BackgroundJobManager {
             const now = new Date();
 
             // Find expired UPI payments
-            const { data: expiredPayments, error } = await supabase
+            const { data: expiredPayments, error } = await db
                 .from('payments')
                 .select(`
                     id,
@@ -182,7 +182,7 @@ class BackgroundJobManager {
             const now = new Date().toISOString();
 
             // Update payment status to expired
-            const { error: paymentError } = await supabase
+            const { error: paymentError } = await db
                 .from('payments')
                 .update({
                     status: 'expired',
@@ -196,7 +196,7 @@ class BackgroundJobManager {
             }
 
             // Update order status back to pending payment
-            const { error: orderError } = await supabase
+            const { error: orderError } = await db
                 .from('orders')
                 .update({
                     payment_status: 'pending',
