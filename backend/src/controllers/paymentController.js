@@ -264,7 +264,7 @@ const generateQRCode = catchAsync(async (req, res) => {
 const getPendingCashRequests = catchAsync(async (req, res) => {
     const { status = 'pending' } = req.query;
 
-    const { data: requests, error } = await require('../config/db').supabase
+    const { data: requests, error } = await require('../config/db').db
         .from('cashier_payment_requests')
         .select('*')
         .eq('status', status)
@@ -347,7 +347,7 @@ const approveCashPayment = catchAsync(async (req, res) => {
     }
 
     // Start timer
-    const { data: order } = await require('../config/db').supabase
+    const { data: order } = await require('../config/db').db
         .from('orders')
         .select('table_id, session_id')
         .eq('id', result.orderId)
@@ -488,7 +488,7 @@ const verifyUPIPayment = catchAsync(async (req, res) => {
     }
 
     // Start timer
-    const { data: order } = await require('../config/db').supabase
+    const { data: order } = await require('../config/db').db
         .from('orders')
         .select('table_id, session_id')
         .eq('id', order_id)
