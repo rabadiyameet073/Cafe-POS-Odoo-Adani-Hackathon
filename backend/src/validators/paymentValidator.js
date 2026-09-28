@@ -6,17 +6,19 @@
 
 const { body } = require('express-validator');
 
+const isValidId = val => !val || /^[a-zA-Z0-9_\-:]{1,64}$/.test(String(val).trim());
+
 /**
  * Validation rules for processing a payment
  */
 const processPaymentValidation = [
     body('order_id')
         .notEmpty().withMessage('Order ID is required')
-        .isUUID().withMessage('Invalid order ID format'),
+        .custom(isValidId).withMessage('Invalid order ID format'),
 
     body('payment_method_id')
         .notEmpty().withMessage('Payment method ID is required')
-        .isUUID().withMessage('Invalid payment method ID format'),
+        .custom(isValidId).withMessage('Invalid payment method ID format'),
 
     body('amount')
         .notEmpty().withMessage('Amount is required')

@@ -101,6 +101,21 @@ function App() {
               {/* ═══ Kitchen Routes ═══ (Protected) */}
               <Route path="/kitchen/display" element={<ProtectedRoute allowedRoles={['kitchen']}><KitchenDisplay /></ProtectedRoute>} />
 
+              {/* ═══ Top-Level Shortcuts & Navigation Aliases ═══ */}
+              <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="/cashier" element={<Navigate to="/cashier/dashboard" replace />} />
+              <Route path="/kitchen" element={<Navigate to="/kitchen/display" replace />} />
+              <Route path="/kitchen/kds" element={<Navigate to="/kitchen/display" replace />} />
+              <Route path="/customer" element={<Navigate to="/customer/select-floor" replace />} />
+              <Route path="/tables" element={<Navigate to="/customer/select-floor" replace />} />
+              <Route path="/menu" element={<Navigate to="/customer/browse-menu" replace />} />
+              <Route path="/cart" element={<Navigate to="/customer/shopping-cart" replace />} />
+              <Route path="/checkout" element={<Navigate to="/customer/checkout" replace />} />
+              <Route path="/payment" element={<Navigate to="/customer/checkout" replace />} />
+              <Route path="/orders" element={<Navigate to="/customer/order-tracking" replace />} />
+              <Route path="/order-tracking" element={<Navigate to="/customer/order-tracking" replace />} />
+              <Route path="/feedback" element={<Navigate to="/customer/feedback" replace />} />
+
               {/* ═══ Default → Intro ═══ */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

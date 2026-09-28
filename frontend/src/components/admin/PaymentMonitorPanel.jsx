@@ -18,6 +18,7 @@ const PaymentMonitorPanel = () => {
 
   useEffect(() => {
     fetchPayments()
+    const interval = setInterval(fetchPayments, 5000)
 
     // Subscribe to payments table
     const channel = subscribeToTable('payments', null, (payload) => {
@@ -35,6 +36,7 @@ const PaymentMonitorPanel = () => {
     })
 
     return () => {
+      clearInterval(interval)
       unsubscribeFromChannel(channel)
     }
   }, [])

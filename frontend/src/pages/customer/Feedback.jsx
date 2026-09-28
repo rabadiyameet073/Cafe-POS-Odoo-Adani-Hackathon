@@ -54,7 +54,8 @@ const Feedback = () => {
       await submitFeedback({
         table_token: tableToken,
         table_number: tableNumber,
-        order_id: null,
+        table_id: sessionStorage.getItem('table_id') || null,
+        order_id: sessionStorage.getItem('last_order_id') || null,
         session_id: sessionStorage.getItem('session_id') || null,
         ...ratings,
         comment,

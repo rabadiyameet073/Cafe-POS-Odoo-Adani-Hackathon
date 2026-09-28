@@ -1,9 +1,23 @@
 import { db } from './db.service'
 
-// ─── UPI Configuration ───
+// ─── UPI Configuration & Dynamic Settings ───
 const UPI_ID = 'rabadiyameet09@okaxis'
 const MERCHANT_NAME = 'Meet Rabadiya'
 const TIMER_MINUTES = 39
+
+export function getAppSettings() {
+    try {
+        const saved = localStorage.getItem('cafe_pos_settings')
+        if (saved) return { ...JSON.parse(saved) }
+    } catch (_) {}
+    return {
+        cafe_name: 'Odoo Cafe',
+        tax_rate: 5,
+        timer_duration: 39,
+        upi_id: 'rabadiyameet09@okaxis',
+        merchant_name: 'Meet Rabadiya'
+    }
+}
 
 // ─── Generate unique token ───
 function generateToken() {
@@ -251,9 +265,10 @@ export async function createPayment(orderId, method, amount, tableToken, tableNu
 }
 
 export function buildUPIString(amount, tableToken) {
+    const settings = getAppSettings()
     const params = new URLSearchParams({
-        pa: UPI_ID,
-        pn: MERCHANT_NAME,
+        pa: settings.upi_id || UPI_ID,
+        pn: settings.merchant_name || MERCHANT_NAME,
         am: amount.toFixed(2),
         cu: 'INR',
         tn: `Table ${tableToken}`
@@ -265,10 +280,12 @@ export function getQRCodeURL(upiString, size = 300) {
     return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(upiString)}`
 }
 
-// ─── Start 39-min timer + create kitchen order after payment confirmed ───
+// ─── Start session timer + create kitchen order after payment confirmed ───
 async function startTimerAndKitchen(orderId, tableToken) {
+    const settings = getAppSettings()
+    const timerMins = Number(settings.timer_duration) || TIMER_MINUTES
     const now = new Date()
-    const timerEnd = new Date(now.getTime() + TIMER_MINUTES * 60 * 1000)
+    const timerEnd = new Date(now.getTime() + timerMins * 60 * 1000)
 
     // 1. Update order → paid / received
     try {
@@ -616,17 +633,33 @@ export async function getSessionByToken(tableToken) {
 // ═══════════════════════════════════════
 
 export async function getActiveKitchenOrders() {
-    const { data, error } = await db
-        .from('kitchen_orders')
-        .select('*')
-        .in('status', ['received', 'preparing', 'ready'])
-        .order('received_at', { ascending: true })
-    if (error) throw error
-    return data || []
+    try {
+        const { data, error } = await db
+            .from('kitchen_orders')
+            .select('*')
+            .order('received_at', { ascending: true })
+        if (error) throw error
+        // Return active kitchen tickets (not served or cancelled)
+        return (data || []).filter(o => !['served', 'cancelled', 'completed'].includes(o.status) || o.stage === 'completed' && o.status !== 'served')
+    } catch {
+        return []
+    }
 }
 
 export async function updateKitchenOrderStatus(kitchenOrderId, newStatus) {
-    const updates = { status: newStatus, updated_at: new Date().toISOString() }
+    const stageMap = {
+        'received': 'to_cook',
+        'preparing': 'preparing',
+        'ready': 'ready',
+        'served': 'completed'
+    }
+    const targetStage = stageMap[newStatus] || newStatus
+
+    const updates = { 
+        status: newStatus, 
+        stage: targetStage,
+        updated_at: new Date().toISOString() 
+    }
 
     if (newStatus === 'preparing') {
         updates.started_preparing_at = new Date().toISOString()
@@ -643,23 +676,27 @@ export async function updateKitchenOrderStatus(kitchenOrderId, newStatus) {
 
     if (error) throw error
 
-    // Also update the parent order status
+    // Also update the parent order status and stage
     const { data: ko } = await db
         .from('kitchen_orders')
         .select('order_id')
         .eq('id', kitchenOrderId)
-        .single()
+        .maybeSingle()
 
-    if (ko) {
+    if (ko && ko.order_id) {
         const orderStatus = newStatus === 'preparing' ? 'preparing'
             : newStatus === 'ready' ? 'ready'
                 : newStatus === 'served' ? 'served'
-                    : null
+                    : 'received'
 
         if (orderStatus) {
             await db
                 .from('orders')
-                .update({ status: orderStatus, updated_at: new Date().toISOString() })
+                .update({ 
+                    status: orderStatus, 
+                    stage: targetStage,
+                    updated_at: new Date().toISOString() 
+                })
                 .eq('id', ko.order_id)
         }
     }

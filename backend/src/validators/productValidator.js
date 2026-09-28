@@ -6,6 +6,8 @@
 
 const { body } = require('express-validator');
 
+const isValidId = val => !val || /^[a-zA-Z0-9_\-:]{1,64}$/.test(String(val).trim());
+
 /**
  * Validation rules for creating a product
  */
@@ -17,7 +19,7 @@ const createProductValidation = [
 
     body('category_id')
         .notEmpty().withMessage('Category is required')
-        .isUUID().withMessage('Invalid category ID format'),
+        .custom(isValidId).withMessage('Invalid category ID format'),
 
     body('price')
         .notEmpty().withMessage('Price is required')
@@ -37,8 +39,7 @@ const createProductValidation = [
 
     body('image_url')
         .optional()
-        .trim()
-        .isURL().withMessage('Invalid image URL'),
+        .trim(),
 
     body('is_available')
         .optional()
@@ -56,7 +57,7 @@ const updateProductValidation = [
 
     body('category_id')
         .optional()
-        .isUUID().withMessage('Invalid category ID format'),
+        .custom(isValidId).withMessage('Invalid category ID format'),
 
     body('price')
         .optional()

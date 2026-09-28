@@ -15,7 +15,11 @@ const Floors = () => {
   const [editingFloor, setEditingFloor] = useState(null)
   const [formData, setFormData] = useState({ name: '', description: '', display_order: 0 })
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => { 
+    fetchData() 
+    const interval = setInterval(fetchData, 5000)
+    return () => clearInterval(interval)
+  }, [])
 
   const fetchData = async () => {
     // Fetch independently using MongoDB-direct as primary, backend API as fallback

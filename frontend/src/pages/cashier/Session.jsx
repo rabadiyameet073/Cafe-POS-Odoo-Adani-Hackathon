@@ -12,7 +12,11 @@ const Session = () => {
   const [openingBalance, setOpeningBalance] = useState('')
   const [closingNotes, setClosingNotes] = useState('')
 
-  useEffect(() => { fetchSessions() }, [])
+  useEffect(() => { 
+    fetchSessions() 
+    const interval = setInterval(fetchSessions, 5000)
+    return () => clearInterval(interval)
+  }, [])
 
   const fetchSessions = async () => {
     try {

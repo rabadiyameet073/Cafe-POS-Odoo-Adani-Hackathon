@@ -36,12 +36,14 @@ const Feedback = () => {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    fetchData()
+    fetchData(true)
+    const interval = setInterval(() => fetchData(false), 5000)
+    return () => clearInterval(interval)
   }, [])
 
-  const fetchData = async () => {
+  const fetchData = async (isInitial = false) => {
     try {
-      setLoading(true)
+      if (isInitial) setLoading(true)
       const [allFeedback, feedbackStats] = await Promise.all([
         getAllFeedback(),
         getFeedbackStats()
@@ -51,7 +53,7 @@ const Feedback = () => {
     } catch (err) {
       console.error('Failed to load feedback:', err)
     } finally {
-      setLoading(false)
+      if (isInitial) setLoading(false)
     }
   }
 

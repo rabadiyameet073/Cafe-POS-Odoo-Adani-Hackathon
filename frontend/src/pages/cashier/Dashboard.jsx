@@ -20,7 +20,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchStats()
-    const interval = setInterval(fetchStats, 30000)
+    const interval = setInterval(fetchStats, 5000)
     return () => clearInterval(interval)
   }, [])
 

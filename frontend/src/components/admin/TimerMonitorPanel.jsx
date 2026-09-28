@@ -15,6 +15,7 @@ const TimerMonitorPanel = () => {
 
   useEffect(() => {
     fetchActiveSessions()
+    const interval = setInterval(fetchActiveSessions, 5000)
 
     // Subscribe to table_sessions filtered by timer_status='running'
     const channel = subscribeToTable(
@@ -36,6 +37,7 @@ const TimerMonitorPanel = () => {
     )
 
     return () => {
+      clearInterval(interval)
       unsubscribeFromChannel(channel)
     }
   }, [])

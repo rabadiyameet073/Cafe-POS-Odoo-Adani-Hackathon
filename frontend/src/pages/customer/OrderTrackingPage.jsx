@@ -26,6 +26,7 @@ const OrderTrackingPage = () => {
       if (orders.length > 0) {
         const latestOrder = orders[0]
         setOrder(latestOrder)
+        if (latestOrder?.id) sessionStorage.setItem('last_order_id', latestOrder.id)
         const ko = await getKitchenOrderByOrderId(latestOrder.id)
         if (ko) setKitchenOrder(ko)
       }

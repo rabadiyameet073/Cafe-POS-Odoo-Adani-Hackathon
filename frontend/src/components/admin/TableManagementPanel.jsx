@@ -19,6 +19,7 @@ const TableManagementPanel = () => {
   useEffect(() => {
     fetchFloors()
     fetchTables()
+    const interval = setInterval(fetchTables, 5000)
 
     // Subscribe to tables changes
     const tablesChannel = subscribeToTable('tables', null, (payload) => {
@@ -43,6 +44,7 @@ const TableManagementPanel = () => {
     })
 
     return () => {
+      clearInterval(interval)
       unsubscribeFromChannel(tablesChannel)
       unsubscribeFromChannel(sessionsChannel)
     }

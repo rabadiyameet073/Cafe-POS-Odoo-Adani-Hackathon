@@ -12,6 +12,7 @@ const OccupiedTablesView = () => {
 
   useEffect(() => {
     fetchOccupiedTables()
+    const interval = setInterval(fetchOccupiedTables, 5000)
 
     // Subscribe to tables table for status changes
     const channel = subscribeToTable('tables', null, (payload) => {
@@ -30,6 +31,7 @@ const OccupiedTablesView = () => {
     })
 
     return () => {
+      clearInterval(interval)
       unsubscribeFromChannel(channel)
     }
   }, [])

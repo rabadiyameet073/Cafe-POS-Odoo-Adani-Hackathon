@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import CashierLayout from '../../components/layouts/CashierLayout'
 import { floorService, tableService } from '../../services/api.service'
+import { subscribeToTable, unsubscribeFromChannel } from '../../services/db.service'
 import Loading from '../../components/Loading'
 import { showToast } from '../../components/Toast'
 import Icon from '../../components/Icons'
@@ -23,7 +24,15 @@ const Floor = () => {
   const tabRefs = useRef({})
   const tabBarRef = useRef(null)
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => { 
+    fetchData() 
+    const interval = setInterval(fetchData, 4000)
+    const sub = subscribeToTable('tables', null, () => fetchData())
+    return () => {
+      clearInterval(interval)
+      unsubscribeFromChannel(sub)
+    }
+  }, [])
 
   /* ── animated indicator position ── */
   useEffect(() => {

@@ -22,7 +22,7 @@ const Display = () => {
 
   useEffect(() => {
     fetchOrders()
-    const interval = setInterval(fetchOrders, 10000)
+    const interval = setInterval(fetchOrders, 3000)
     const tick = setInterval(() => setNow(Date.now()), 15000)
 
     const sub = subscribeToTable('kitchen_orders', null, (payload) => {
@@ -81,9 +81,9 @@ const Display = () => {
 
   const parseItems = (items) => typeof items === 'string' ? JSON.parse(items) : items
 
-  const pendingOrders = orders.filter(o => o.status === 'received')
-  const preparingOrders = orders.filter(o => o.status === 'preparing')
-  const readyOrders = orders.filter(o => o.status === 'ready')
+  const pendingOrders = orders.filter(o => o.status === 'received' || o.stage === 'to_cook' || o.status === 'to_cook')
+  const preparingOrders = orders.filter(o => o.status === 'preparing' || o.stage === 'preparing')
+  const readyOrders = orders.filter(o => o.status === 'ready' || o.stage === 'ready' || (o.stage === 'completed' && o.status !== 'served'))
 
   const totalItems = orders.reduce((s, o) => s + getItemCount(o.items), 0)
 

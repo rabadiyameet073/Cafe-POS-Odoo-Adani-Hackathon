@@ -14,6 +14,8 @@ const Payments = () => {
 
   useEffect(() => {
     fetchPayments()
+    const interval = setInterval(fetchPayments, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   // Real-time subscription

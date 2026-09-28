@@ -77,7 +77,13 @@ const Floors = () => {
   }, [])
 
   useEffect(() => {
-    if (selectedFloor) fetchTables(selectedFloor.id)
+    if (selectedFloor) {
+      fetchTables(selectedFloor.id)
+      const interval = setInterval(() => {
+        fetchTables(selectedFloor.id)
+      }, 4000)
+      return () => clearInterval(interval)
+    }
   }, [selectedFloor])
 
   useEffect(() => {

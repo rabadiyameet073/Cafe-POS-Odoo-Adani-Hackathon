@@ -6,17 +6,19 @@
 
 const { body } = require('express-validator');
 
+const isValidId = val => !val || /^[a-zA-Z0-9_\-:]{1,64}$/.test(String(val).trim());
+
 /**
  * Validation rules for creating an order
  */
 const createOrderValidation = [
     body('table_id')
         .optional({ nullable: true, checkFalsy: true })
-        .isUUID().withMessage('Invalid table ID format'),
+        .custom(isValidId).withMessage('Invalid table ID format'),
 
     body('session_id')
         .optional()
-        .isUUID().withMessage('Invalid session ID format'),
+        .custom(isValidId).withMessage('Invalid session ID format'),
 
     body('order_type')
         .optional()
@@ -32,11 +34,11 @@ const createOrderValidation = [
 
     body('items.*.product_id')
         .optional()
-        .isUUID().withMessage('Invalid product ID'),
+        .custom(isValidId).withMessage('Invalid product ID'),
 
     body('items.*.variant_id')
         .optional({ nullable: true, checkFalsy: true })
-        .isUUID().withMessage('Invalid variant ID'),
+        .custom(isValidId).withMessage('Invalid variant ID'),
 
     body('items.*.quantity')
         .optional()
@@ -49,11 +51,11 @@ const createOrderValidation = [
 const addItemValidation = [
     body('product_id')
         .notEmpty().withMessage('Product ID is required')
-        .isUUID().withMessage('Invalid product ID format'),
+        .custom(isValidId).withMessage('Invalid product ID format'),
 
     body('variant_id')
         .optional()
-        .isUUID().withMessage('Invalid variant ID format'),
+        .custom(isValidId).withMessage('Invalid variant ID format'),
 
     body('quantity')
         .optional()
