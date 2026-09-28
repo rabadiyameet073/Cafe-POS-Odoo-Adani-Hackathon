@@ -4,7 +4,7 @@
  * Database operations for orders table.
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const { generateOrderNumber } = require('../utils/helpers');
 const logger = require('../utils/logger');
 
@@ -13,7 +13,7 @@ const Order = {
      * Find all orders with optional filters
      */
     async findAll(filters = {}) {
-        let query = supabase
+        let query = db
             .from('orders')
             // Keep this select conservative and aligned with schema.sql
             .select(`
@@ -64,7 +64,7 @@ const Order = {
      * Find order by ID with items
      */
     async findById(id) {
-        const { data: order, error } = await supabase
+        const { data: order, error } = await db
             .from('orders')
             .select(`
                 *,
@@ -77,7 +77,7 @@ const Order = {
         if (!order) return null;
 
         // Get order items
-        const { data: items } = await supabase
+        const { data: items } = await db
             .from('order_items')
             .select(`
                 *,
@@ -115,7 +115,7 @@ const Order = {
             orderData.order_number = generateOrderNumber();
         }
 
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('orders')
             .insert(orderData)
             .select(`
@@ -132,7 +132,7 @@ const Order = {
      * Update an order
      */
     async update(id, updates) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('orders')
             .update({ ...updates, updated_at: new Date().toISOString() })
             .eq('id', id)
@@ -176,7 +176,7 @@ const Order = {
      */
     async updateTotals(id) {
         // Get all items for this order
-        const { data: items } = await supabase
+        const { data: items } = await db
             .from('order_items')
             .select('line_total, tax_percentage, unit_price, variant_price, quantity')
             .eq('order_id', id);
