@@ -4,7 +4,7 @@
  * Database operations for floors table.
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 const Floor = {
@@ -12,7 +12,7 @@ const Floor = {
      * Find all floors with optional filters
      */
     async findAll(filters = {}) {
-        let query = supabase
+        let query = db
             .from('floors')
             .select('*')
             .order('display_order', { ascending: true });
@@ -31,7 +31,7 @@ const Floor = {
      * Find floor by ID with table count
      */
     async findById(id) {
-        const { data: floor, error } = await supabase
+        const { data: floor, error } = await db
             .from('floors')
             .select('*')
             .eq('id', id)
@@ -41,7 +41,7 @@ const Floor = {
         if (!floor) return null;
 
         // Get table count for this floor
-        const { count } = await supabase
+        const { count } = await db
             .from('tables')
             .select('id', { count: 'exact', head: true })
             .eq('floor_id', id)
@@ -60,7 +60,7 @@ const Floor = {
 
         // Get table counts for each floor
         for (const floor of floors) {
-            const { count } = await supabase
+            const { count } = await db
                 .from('tables')
                 .select('id', { count: 'exact', head: true })
                 .eq('floor_id', floor.id)
@@ -76,7 +76,7 @@ const Floor = {
      * Create a new floor
      */
     async create(floorData) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('floors')
             .insert(floorData)
             .select('*')
@@ -90,7 +90,7 @@ const Floor = {
      * Update a floor
      */
     async update(id, updates) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('floors')
             .update({ ...updates, updated_at: new Date().toISOString() })
             .eq('id', id)
@@ -112,7 +112,7 @@ const Floor = {
      * Get next display order
      */
     async getNextDisplayOrder() {
-        const { data } = await supabase
+        const { data } = await db
             .from('floors')
             .select('display_order')
             .order('display_order', { ascending: false })
