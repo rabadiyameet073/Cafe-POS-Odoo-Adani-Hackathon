@@ -155,6 +155,10 @@ class MongoQueryBuilder {
                     cleaned.table_sessions = sessions.map(s => cleanDoc(s));
                 }
             }
+            if (this.tableName === 'table_sessions' && fields.includes('tables') && cleaned.table_id) {
+                const tbl = await schemas.Table.findOne({ id: cleaned.table_id }).lean();
+                if (tbl) cleaned.tables = { id: tbl.id, table_number: tbl.table_number, floor_id: tbl.floor_id };
+            }
             if (this.tableName === 'products' && fields.includes('product_categories') && cleaned.category_id) {
                 const cat = await schemas.ProductCategory.findOne({ id: cleaned.category_id }).lean();
                 if (cat) cleaned.product_categories = { id: cat.id, name: cat.name, icon_emoji: cat.icon_emoji, send_to_kitchen: cat.send_to_kitchen };

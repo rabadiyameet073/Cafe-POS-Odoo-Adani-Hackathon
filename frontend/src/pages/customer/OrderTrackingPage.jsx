@@ -38,7 +38,11 @@ const OrderTrackingPage = () => {
     }
   }, [tableToken])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => {
+    fetchData()
+    const interval = setInterval(fetchData, 4000)
+    return () => clearInterval(interval)
+  }, [fetchData])
 
   useEffect(() => {
     if (!tableToken) return

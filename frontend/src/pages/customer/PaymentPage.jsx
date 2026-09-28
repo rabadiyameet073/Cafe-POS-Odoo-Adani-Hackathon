@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CustomerLayout from '../../components/layouts/CustomerLayout'
-import { createOrder, createPayment, createCashierRequest, completeUPIPayment, buildUPIString, getQRCodeURL } from '../../services/cafe.service'
-import { subscribeToTable, unsubscribeFromChannel } from '../../services/db.service'
+import { createOrder, createPayment, createCashierRequest, completeUPIPayment, approveCashierRequest, buildUPIString, getQRCodeURL } from '../../services/cafe.service'
+import { db, subscribeToTable, unsubscribeFromChannel } from '../../services/db.service'
 import { showToast } from '../../components/Toast'
 
 const PaymentPage = () => {
@@ -35,16 +35,20 @@ const PaymentPage = () => {
     setCart(JSON.parse(saved))
   }, [])
 
-  // Subscribe to cashier_payment_requests for real-time approval
+  // Subscribe to cashier_payment_requests for real-time approval + Polling fallback
   useEffect(() => {
     if (!waitingForCashier || !paymentId) return
 
+    const handleApproval = () => {
+      setCashierStatus('approved')
+      showToast('Payment approved by cashier!')
+      sessionStorage.removeItem('cafe_cart')
+      setTimeout(() => navigate('/customer/order-tracking'), 1200)
+    }
+
     const sub = subscribeToTable('cashier_payment_requests', `payment_id=eq.${paymentId}`, (payload) => {
       if (payload.new && payload.new.status === 'approved') {
-        setCashierStatus('approved')
-        showToast('Payment approved by cashier!')
-        sessionStorage.removeItem('cafe_cart')
-        setTimeout(() => navigate('/customer/order-tracking'), 1500)
+        handleApproval()
       } else if (payload.new && payload.new.status === 'rejected') {
         setCashierStatus('rejected')
         showToast('Payment rejected by cashier.', 'error')
@@ -55,18 +59,39 @@ const PaymentPage = () => {
     // Also subscribe to payment updates directly
     const sub2 = subscribeToTable('payments', `id=eq.${paymentId}`, (payload) => {
       if (payload.new && ['approved', 'completed'].includes(payload.new.status)) {
-        setCashierStatus('approved')
-        showToast('Payment confirmed!')
-        sessionStorage.removeItem('cafe_cart')
-        setTimeout(() => navigate('/customer/order-tracking'), 1500)
+        handleApproval()
       }
     })
 
+    // Polling fallback every 2 seconds (guarantees update across serverless instances)
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data: pay } = await db.from('payments').select('status').eq('id', paymentId).maybeSingle()
+        if (pay && ['approved', 'completed'].includes(pay.status)) {
+          clearInterval(pollInterval)
+          handleApproval()
+          return
+        }
+
+        const { data: req } = await db.from('cashier_payment_requests').select('status').eq('payment_id', paymentId).maybeSingle()
+        if (req && req.status === 'approved') {
+          clearInterval(pollInterval)
+          handleApproval()
+        } else if (req && req.status === 'rejected') {
+          clearInterval(pollInterval)
+          setCashierStatus('rejected')
+          showToast('Payment rejected by cashier.', 'error')
+          setWaitingForCashier(false)
+        }
+      } catch (e) {}
+    }, 2000)
+
     return () => {
+      clearInterval(pollInterval)
       unsubscribeFromChannel(sub)
       unsubscribeFromChannel(sub2)
     }
-  }, [waitingForCashier, paymentId])
+  }, [waitingForCashier, paymentId, navigate])
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0)
   const tax = subtotal * 0.05
@@ -115,13 +140,33 @@ const PaymentPage = () => {
   const handleUPIDone = async () => {
     setProcessing(true)
     try {
-      await completeUPIPayment(paymentId, orderId)
+      await completeUPIPayment(paymentId, orderId, tableToken)
       sessionStorage.removeItem('cafe_cart')
       setShowQR(false)
       showToast('Payment recorded! Redirecting...')
       setTimeout(() => navigate('/customer/order-tracking'), 1200)
     } catch (err) {
       showToast(err.message || 'Failed to confirm payment', 'error')
+      setProcessing(false)
+    }
+  }
+
+  const handleSimulateCashierApproval = async () => {
+    setProcessing(true)
+    try {
+      const { data: requests } = await db.from('cashier_payment_requests').select('id').eq('payment_id', paymentId)
+      const reqId = requests && requests[0] ? requests[0].id : null
+      if (reqId) {
+        await approveCashierRequest(reqId, 'Cashier Demo')
+      } else {
+        await completeUPIPayment(paymentId, orderId, tableToken)
+      }
+      setCashierStatus('approved')
+      showToast('Payment approved by cashier!')
+      sessionStorage.removeItem('cafe_cart')
+      setTimeout(() => navigate('/customer/order-tracking'), 1200)
+    } catch (err) {
+      showToast(err.message || 'Approval simulation failed', 'error')
       setProcessing(false)
     }
   }
@@ -187,6 +232,30 @@ const PaymentPage = () => {
                 </div>
 
                 <p className="pay-table-info">Table {tableNumber}</p>
+
+                <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dashed var(--border-subtle)' }}>
+                  <button
+                    onClick={handleSimulateCashierApproval}
+                    disabled={processing}
+                    className="pay-cta-btn"
+                    style={{
+                      background: 'rgba(16,185,129,0.12)',
+                      color: 'var(--accent-emerald)',
+                      border: '1px solid rgba(16,185,129,0.3)',
+                      fontSize: '0.82rem',
+                      padding: '0.65rem 1rem',
+                      width: '100%',
+                      cursor: 'pointer',
+                      borderRadius: '0.75rem',
+                      fontWeight: 600
+                    }}
+                  >
+                    ⚡ Demo: Approve Cash Payment Now
+                  </button>
+                  <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.35rem', textAlign: 'center' }}>
+                    Or approve via Cashier Dashboard (/cashier/orders)
+                  </p>
+                </div>
               </div>
             )}
           </div>

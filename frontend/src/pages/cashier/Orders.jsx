@@ -20,6 +20,11 @@ const Orders = () => {
   useEffect(() => {
     fetchRequests()
     fetchHistory()
+    const interval = setInterval(() => {
+      fetchRequests()
+      fetchHistory()
+    }, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   // Real-time subscription

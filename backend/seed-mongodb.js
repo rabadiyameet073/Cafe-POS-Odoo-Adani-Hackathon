@@ -347,14 +347,476 @@ async function seed() {
         }
     }
 
+    // 5. Seed Table Sessions & Occupied Tables
+    console.log('\n--- 5. Seeding Table Sessions & Live Timers ---');
+    const nowMs = Date.now();
+    const minAgo = (m) => new Date(nowMs - m * 60 * 1000);
+    const minFromNow = (m) => new Date(nowMs + m * 60 * 1000);
+
+    // Find table IDs
+    const tableG2 = await schemas.Table.findOne({ table_number: 'G-2' });
+    const tableF3 = await schemas.Table.findOne({ table_number: 'F-3' });
+    const tableT2 = await schemas.Table.findOne({ table_number: 'T-2' });
+    const tableG5 = await schemas.Table.findOne({ table_number: 'G-5' });
+    const tableG1 = await schemas.Table.findOne({ table_number: 'G-1' });
+    const tableF1 = await schemas.Table.findOne({ table_number: 'F-1' });
+    const tableT1 = await schemas.Table.findOne({ table_number: 'T-1' });
+    const tableG4 = await schemas.Table.findOne({ table_number: 'G-4' });
+
+    if (tableG2) {
+        await schemas.Table.updateOne({ id: tableG2.id }, {
+            status: 'occupied',
+            current_session_id: 'sess-g2',
+            occupied_since: minAgo(14),
+            occupied_until: minFromNow(25),
+            qr_code_token: 'GF-T2'
+        });
+        await schemas.TableSession.deleteMany({ table_id: tableG2.id });
+        await schemas.TableSession.create({
+            id: 'sess-g2',
+            table_id: tableG2.id,
+            floor_id: tableG2.floor_id,
+            table_number: 'G-2',
+            table_token: 'GF-T2',
+            customer_name: 'Walk-in Guest',
+            status: 'active',
+            timer_status: 'running',
+            duration_minutes: 39,
+            session_start: minAgo(14),
+            timer_started_at: minAgo(14),
+            timer_ends_at: minFromNow(25)
+        });
+        console.log('  + Table G-2 marked occupied with 25 mins remaining');
+    }
+
+    if (tableF3) {
+        await schemas.Table.updateOne({ id: tableF3.id }, {
+            status: 'occupied',
+            current_session_id: 'sess-f3',
+            occupied_since: minAgo(31),
+            occupied_until: minFromNow(8),
+            qr_code_token: 'FF-T3'
+        });
+        await schemas.TableSession.deleteMany({ table_id: tableF3.id });
+        await schemas.TableSession.create({
+            id: 'sess-f3',
+            table_id: tableF3.id,
+            floor_id: tableF3.floor_id,
+            table_number: 'F-3',
+            table_token: 'FF-T3',
+            customer_name: 'Pooja & Friends',
+            status: 'active',
+            timer_status: 'running',
+            duration_minutes: 39,
+            session_start: minAgo(31),
+            timer_started_at: minAgo(31),
+            timer_ends_at: minFromNow(8)
+        });
+        console.log('  + Table F-3 marked occupied with 8 mins remaining');
+    }
+
+    if (tableT2) {
+        await schemas.Table.updateOne({ id: tableT2.id }, {
+            status: 'occupied',
+            current_session_id: 'sess-t2',
+            occupied_since: minAgo(5),
+            occupied_until: minFromNow(34),
+            qr_code_token: 'TR-T2'
+        });
+        await schemas.TableSession.deleteMany({ table_id: tableT2.id });
+        await schemas.TableSession.create({
+            id: 'sess-t2',
+            table_id: tableT2.id,
+            floor_id: tableT2.floor_id,
+            table_number: 'T-2',
+            table_token: 'TR-T2',
+            customer_name: 'Rohan Sharma',
+            status: 'active',
+            timer_status: 'running',
+            duration_minutes: 39,
+            session_start: minAgo(5),
+            timer_started_at: minAgo(5),
+            timer_ends_at: minFromNow(34)
+        });
+        console.log('  + Table T-2 marked occupied with 34 mins remaining');
+    }
+
+    // 6. Seed Orders & Order Items
+    console.log('\n--- 6. Seeding Orders, Items & Payments ---');
+    const mockOrders = [
+        {
+            id: 'ord-1001',
+            order_number: 'ORD-20260928-1001',
+            table_id: tableG2?.id || 't2',
+            table_number: 'G-2',
+            table_token: 'GF-T2',
+            session_id: 'sess-g2',
+            subtotal: 330,
+            tax_amount: 16.50,
+            total_amount: 346.50,
+            status: 'received',
+            payment_status: 'paid',
+            payment_method: 'upi',
+            created_at: minAgo(14),
+            payment_confirmed_at: minAgo(14),
+            items: [
+                { product_name: 'Masala Chai', quantity: 2, unit_price: 40, line_total: 80 },
+                { product_name: 'Loaded Cheesy Nachos', quantity: 1, unit_price: 160, line_total: 160 },
+                { product_name: 'Sizzling Chocolate Brownie', quantity: 1, unit_price: 90, line_total: 90 }
+            ],
+            payment: {
+                id: 'pay-1001',
+                amount: 346.50,
+                payment_method: 'upi',
+                status: 'completed',
+                cashier_name: 'UPI Gateway',
+                payment_confirmed_at: minAgo(14)
+            },
+            kitchen: {
+                id: 'ko-1',
+                status: 'received',
+                stage: 'to_cook',
+                priority: 0,
+                received_at: minAgo(14)
+            }
+        },
+        {
+            id: 'ord-1002',
+            order_number: 'ORD-20260928-1002',
+            table_id: tableF3?.id || 't12',
+            table_number: 'F-3',
+            table_token: 'FF-T3',
+            session_id: 'sess-f3',
+            subtotal: 620,
+            tax_amount: 31,
+            total_amount: 651,
+            status: 'preparing',
+            payment_status: 'paid',
+            payment_method: 'cash',
+            created_at: minAgo(31),
+            payment_confirmed_at: minAgo(30),
+            items: [
+                { product_name: 'Paneer Butter Masala', quantity: 1, unit_price: 220, line_total: 220 },
+                { product_name: 'Veg Biryani', quantity: 1, unit_price: 180, line_total: 180 },
+                { product_name: 'Cold Coffee', quantity: 2, unit_price: 110, line_total: 220 }
+            ],
+            payment: {
+                id: 'pay-1002',
+                amount: 651,
+                payment_method: 'cash',
+                status: 'approved',
+                cashier_name: 'Cashier Staff',
+                approved_at: minAgo(30),
+                payment_confirmed_at: minAgo(30)
+            },
+            kitchen: {
+                id: 'ko-2',
+                status: 'preparing',
+                stage: 'cooking',
+                priority: 1,
+                received_at: minAgo(30),
+                started_preparing_at: minAgo(20)
+            },
+            cashierReq: {
+                id: 'cpr-1002',
+                status: 'approved',
+                cashier_name: 'Cashier Staff',
+                responded_at: minAgo(30)
+            }
+        },
+        {
+            id: 'ord-1003',
+            order_number: 'ORD-20260928-1003',
+            table_id: tableT2?.id || 't22',
+            table_number: 'T-2',
+            table_token: 'TR-T2',
+            session_id: 'sess-t2',
+            subtotal: 450,
+            tax_amount: 22.50,
+            total_amount: 472.50,
+            status: 'ready',
+            payment_status: 'paid',
+            payment_method: 'upi',
+            created_at: minAgo(22),
+            payment_confirmed_at: minAgo(21),
+            items: [
+                { product_name: 'Cappuccino', quantity: 2, unit_price: 120, line_total: 240 },
+                { product_name: 'New York Cheesecake', quantity: 1, unit_price: 210, line_total: 210 }
+            ],
+            payment: {
+                id: 'pay-1003',
+                amount: 472.50,
+                payment_method: 'upi',
+                status: 'completed',
+                cashier_name: 'UPI Gateway',
+                payment_confirmed_at: minAgo(21)
+            },
+            kitchen: {
+                id: 'ko-3',
+                status: 'ready',
+                stage: 'ready',
+                priority: 0,
+                received_at: minAgo(21),
+                started_preparing_at: minAgo(16),
+                ready_at: minAgo(4)
+            }
+        },
+        {
+            id: 'ord-1004',
+            order_number: 'ORD-20260928-1004',
+            table_id: tableG5?.id || 't5',
+            table_number: 'G-5',
+            table_token: 'GF-T5',
+            session_id: 'sess-g5',
+            subtotal: 160,
+            tax_amount: 8,
+            total_amount: 168,
+            status: 'payment_requested',
+            payment_status: 'pending_cash',
+            payment_method: 'cash',
+            created_at: minAgo(3),
+            items: [
+                { product_name: 'Veg Samosa', quantity: 2, unit_price: 30, line_total: 60 },
+                { product_name: 'Filter Coffee', quantity: 2, unit_price: 50, line_total: 100 }
+            ],
+            payment: {
+                id: 'pay-1004',
+                amount: 168,
+                payment_method: 'cash',
+                status: 'pending_approval'
+            },
+            cashierReq: {
+                id: 'cpr-1004',
+                status: 'pending'
+            }
+        },
+        {
+            id: 'ord-0901',
+            order_number: 'ORD-20260928-0901',
+            table_id: tableG1?.id || 't1',
+            table_number: 'G-1',
+            table_token: 'GF-T1',
+            subtotal: 680,
+            tax_amount: 34,
+            total_amount: 714,
+            status: 'completed',
+            payment_status: 'paid',
+            payment_method: 'upi',
+            created_at: minAgo(65),
+            payment_confirmed_at: minAgo(64),
+            completed_at: minAgo(30),
+            items: [
+                { product_name: 'Gourmet Veggie Burger', quantity: 2, unit_price: 190, line_total: 380 },
+                { product_name: 'Blended Caramel Frappe', quantity: 2, unit_price: 150, line_total: 300 }
+            ],
+            payment: {
+                id: 'pay-0901',
+                amount: 714,
+                payment_method: 'upi',
+                status: 'completed',
+                cashier_name: 'UPI Gateway',
+                payment_confirmed_at: minAgo(64)
+            }
+        },
+        {
+            id: 'ord-0902',
+            order_number: 'ORD-20260928-0902',
+            table_id: tableF1?.id || 't10',
+            table_number: 'F-1',
+            table_token: 'FF-T1',
+            subtotal: 440,
+            tax_amount: 22,
+            total_amount: 462,
+            status: 'completed',
+            payment_status: 'paid',
+            payment_method: 'cash',
+            created_at: minAgo(130),
+            payment_confirmed_at: minAgo(129),
+            completed_at: minAgo(90),
+            items: [
+                { product_name: 'Dal Makhani', quantity: 1, unit_price: 180, line_total: 180 },
+                { product_name: 'Veg Biryani', quantity: 1, unit_price: 180, line_total: 180 },
+                { product_name: 'Masala Chai', quantity: 2, unit_price: 40, line_total: 80 }
+            ],
+            payment: {
+                id: 'pay-0902',
+                amount: 462,
+                payment_method: 'cash',
+                status: 'approved',
+                cashier_name: 'Cashier Staff',
+                approved_at: minAgo(129),
+                payment_confirmed_at: minAgo(129)
+            }
+        },
+        {
+            id: 'ord-0903',
+            order_number: 'ORD-20260928-0903',
+            table_id: tableT1?.id || 't21',
+            table_number: 'T-1',
+            table_token: 'TR-T1',
+            subtotal: 230,
+            tax_amount: 11.50,
+            total_amount: 241.50,
+            status: 'completed',
+            payment_status: 'paid',
+            payment_method: 'upi',
+            created_at: minAgo(190),
+            payment_confirmed_at: minAgo(189),
+            completed_at: minAgo(150),
+            items: [
+                { product_name: 'Sandwich', quantity: 1, unit_price: 80, line_total: 80 },
+                { product_name: 'Crispy Peri Peri Fries', quantity: 1, unit_price: 90, line_total: 90 },
+                { product_name: 'Lemon Soda', quantity: 1, unit_price: 60, line_total: 60 }
+            ],
+            payment: {
+                id: 'pay-0903',
+                amount: 241.50,
+                payment_method: 'upi',
+                status: 'completed',
+                cashier_name: 'UPI Gateway',
+                payment_confirmed_at: minAgo(189)
+            }
+        },
+        {
+            id: 'ord-0904',
+            order_number: 'ORD-20260928-0904',
+            table_id: tableG4?.id || 't4',
+            table_number: 'G-4',
+            table_token: 'GF-T4',
+            subtotal: 480,
+            tax_amount: 24,
+            total_amount: 504,
+            status: 'completed',
+            payment_status: 'paid',
+            payment_method: 'cash',
+            created_at: minAgo(250),
+            payment_confirmed_at: minAgo(249),
+            completed_at: minAgo(210),
+            items: [
+                { product_name: 'Idli Sambar', quantity: 3, unit_price: 70, line_total: 210 },
+                { product_name: 'Filter Coffee', quantity: 3, unit_price: 50, line_total: 150 },
+                { product_name: 'Gulab Jamun', quantity: 2, unit_price: 60, line_total: 120 }
+            ],
+            payment: {
+                id: 'pay-0904',
+                amount: 504,
+                payment_method: 'cash',
+                status: 'approved',
+                cashier_name: 'Cashier Staff',
+                approved_at: minAgo(249),
+                payment_confirmed_at: minAgo(249)
+            }
+        }
+    ];
+
+    for (const o of mockOrders) {
+        await schemas.Order.deleteOne({ id: o.id });
+        await schemas.Order.create({
+            id: o.id,
+            order_number: o.order_number,
+            table_id: o.table_id,
+            table_number: o.table_number,
+            table_token: o.table_token,
+            session_id: o.session_id,
+            subtotal: o.subtotal,
+            tax_amount: o.tax_amount,
+            total_amount: o.total_amount,
+            status: o.status,
+            payment_status: o.payment_status,
+            payment_method: o.payment_method,
+            order_type: 'dine_in',
+            is_deleted: false,
+            created_at: o.created_at,
+            payment_confirmed_at: o.payment_confirmed_at,
+            completed_at: o.completed_at
+        });
+
+        // Seed items
+        await schemas.OrderItem.deleteMany({ order_id: o.id });
+        for (const item of o.items) {
+            await schemas.OrderItem.create({
+                id: uuidv4(),
+                order_id: o.id,
+                product_id: uuidv4(),
+                product_name: item.product_name,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                line_total: item.line_total,
+                tax_percentage: 5,
+                kitchen_status: o.status === 'completed' ? 'completed' : (o.kitchen ? o.kitchen.status : 'pending')
+            });
+        }
+
+        // Seed payment
+        if (o.payment) {
+            await schemas.Payment.deleteOne({ id: o.payment.id });
+            await schemas.Payment.create({
+                id: o.payment.id,
+                order_id: o.id,
+                table_token: o.table_token,
+                table_number: o.table_number,
+                amount: o.payment.amount,
+                payment_method: o.payment.payment_method,
+                status: o.payment.status,
+                cashier_name: o.payment.cashier_name,
+                payment_confirmed_at: o.payment.payment_confirmed_at,
+                approved_at: o.payment.approved_at,
+                created_at: o.created_at
+            });
+        }
+
+        // Seed kitchen order
+        if (o.kitchen) {
+            await schemas.KitchenOrder.deleteOne({ id: o.kitchen.id });
+            await schemas.KitchenOrder.create({
+                id: o.kitchen.id,
+                order_id: o.id,
+                order_number: o.order_number,
+                table_number: o.table_number,
+                table_token: o.table_token,
+                status: o.kitchen.status,
+                stage: o.kitchen.stage,
+                payment_method: o.payment_method,
+                items: o.items,
+                priority: o.kitchen.priority,
+                received_at: o.kitchen.received_at,
+                started_preparing_at: o.kitchen.started_preparing_at,
+                ready_at: o.kitchen.ready_at
+            });
+        }
+
+        // Seed cashier request
+        if (o.cashierReq) {
+            await schemas.CashierPaymentRequest.deleteOne({ id: o.cashierReq.id });
+            await schemas.CashierPaymentRequest.create({
+                id: o.cashierReq.id,
+                order_id: o.id,
+                payment_id: o.payment.id,
+                table_number: o.table_number,
+                table_token: o.table_token,
+                total_amount: o.total_amount,
+                amount: o.total_amount,
+                payment_method: 'cash',
+                order_summary: o.items,
+                status: o.cashierReq.status,
+                cashier_name: o.cashierReq.cashier_name,
+                responded_at: o.cashierReq.responded_at,
+                created_at: o.created_at
+            });
+        }
+
+        console.log(`  + Seeded order: ${o.order_number} (${o.status}, ₹${o.total_amount})`);
+    }
+
     console.log('\n========================================');
     console.log('       MongoDB Seeding Complete!');
     console.log('========================================\n');
-    console.log('Demo Accounts:');
-    console.log('  Admin:    admin@cafe.com    / admin123');
-    console.log('  Cashier:  cashier@cafe.com  / cashier123');
-    console.log('  Kitchen:  kitchen@cafe.com  / kitchen123');
-    console.log('  Customer: customer@cafe.com / customer123\n');
+    console.log('Summary:');
+    console.log('  Tables:          27 (G-1..9, F-1..11, T-1..7)');
+    console.log('  Occupied Tables: 3  (G-2: 25m, F-3: 8m, T-2: 34m)');
+    console.log('  Active Orders:   3  (1 Received, 1 Preparing, 1 Ready)');
+    console.log('  Pending Cash:    1  (Table G-5, ₹168)');
+    console.log('  Completed:       4  (Today Revenue: ₹3,391.50)\n');
 
     process.exit(0);
 }
