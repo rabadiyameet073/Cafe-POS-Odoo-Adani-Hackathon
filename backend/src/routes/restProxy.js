@@ -1,7 +1,7 @@
 /**
- * PostgREST / Supabase REST API Emulation for MongoDB
+ * PostgREST / MongoDB REST API Emulation for MongoDB
  * 
- * Handles /rest/v1/:table requests from client-side @supabase/supabase-js.
+ * Handles /rest/v1/:table requests from client-side @db/db-js.
  * Directly translates PostgREST query parameters into MongoDB queries.
  */
 
