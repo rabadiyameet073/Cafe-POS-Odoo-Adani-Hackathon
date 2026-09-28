@@ -7,7 +7,7 @@
  * Requirements: 11.1, 11.2, 13.1, 14.1, 14.2, 14.3
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const TableService = require('./TableService');
 const logger = require('../utils/logger');
 const GracefulDegradationService = require('./GracefulDegradationService');
@@ -30,7 +30,7 @@ class TimerService {
             const endsAt = new Date(now.getTime() + this.TIMER_DURATION_MINUTES * 60 * 1000);
 
             // Update table_sessions
-            const { error: sessionError } = await supabase
+            const { error: sessionError } = await db
                 .from('table_sessions')
                 .update({
                     timer_started_at: now.toISOString(),
@@ -49,7 +49,7 @@ class TimerService {
             }
 
             // Update tables
-            const { error: tableError } = await supabase
+            const { error: tableError } = await db
                 .from('tables')
                 .update({
                     occupied_until: endsAt.toISOString(),
@@ -62,14 +62,14 @@ class TimerService {
             }
 
             // Get session details for logging
-            const { data: session } = await supabase
+            const { data: session } = await db
                 .from('table_sessions')
                 .select('table_token')
                 .eq('id', sessionId)
                 .single();
 
             // Create timer log
-            const { error: logError } = await supabase
+            const { error: logError } = await db
                 .from('table_timer_logs')
                 .insert({
                     table_id: tableId,
@@ -111,7 +111,7 @@ class TimerService {
      */
     async getActiveTimers() {
         try {
-            const { data: sessions, error } = await supabase
+            const { data: sessions, error } = await db
                 .from('table_sessions')
                 .select(`
                     id,
@@ -189,7 +189,7 @@ class TimerService {
             const now = new Date();
 
             // Find expired sessions
-            const { data: expiredSessions, error } = await supabase
+            const { data: expiredSessions, error } = await db
                 .from('table_sessions')
                 .select('id, table_id, table_token, table_number')
                 .eq('timer_status', 'running')
@@ -258,7 +258,7 @@ class TimerService {
             const newEndsAt = new Date(now.getTime() + this.TIMER_DURATION_MINUTES * 60 * 1000);
 
             // Get session details
-            const { data: session, error: fetchError } = await supabase
+            const { data: session, error: fetchError } = await db
                 .from('table_sessions')
                 .select('table_id, table_number')
                 .eq('id', sessionId)
@@ -272,7 +272,7 @@ class TimerService {
             }
 
             // Update session
-            const { error: updateError } = await supabase
+            const { error: updateError } = await db
                 .from('table_sessions')
                 .update({
                     timer_ends_at: newEndsAt.toISOString(),
@@ -290,7 +290,7 @@ class TimerService {
             }
 
             // Update table
-            await supabase
+            await db
                 .from('tables')
                 .update({
                     occupied_until: newEndsAt.toISOString(),
@@ -299,7 +299,7 @@ class TimerService {
                 .eq('id', session.table_id);
 
             // Log admin action
-            await supabase
+            await db
                 .from('admin_logs')
                 .insert({
                     admin_id: adminId,
@@ -341,7 +341,7 @@ class TimerService {
             const now = new Date();
 
             // Get current session
-            const { data: session, error: fetchError } = await supabase
+            const { data: session, error: fetchError } = await db
                 .from('table_sessions')
                 .select('table_id, table_number, timer_ends_at')
                 .eq('id', sessionId)
@@ -358,7 +358,7 @@ class TimerService {
             const newEndsAt = new Date(currentEndsAt.getTime() + minutes * 60 * 1000);
 
             // Update session
-            const { error: updateError } = await supabase
+            const { error: updateError } = await db
                 .from('table_sessions')
                 .update({
                     timer_ends_at: newEndsAt.toISOString(),
@@ -376,7 +376,7 @@ class TimerService {
             }
 
             // Update table
-            await supabase
+            await db
                 .from('tables')
                 .update({
                     occupied_until: newEndsAt.toISOString(),
@@ -385,12 +385,12 @@ class TimerService {
                 .eq('id', session.table_id);
 
             // Update timer log
-            await supabase
+            await db
                 .from('table_timer_logs')
                 .update({
                     extended_by: adminId,
                     extended_at: now.toISOString(),
-                    extension_minutes: supabase.raw(`extension_minutes + ${minutes}`),
+                    extension_minutes: db.raw(`extension_minutes + ${minutes}`),
                     timer_ends_at: newEndsAt.toISOString(),
                     updated_at: now.toISOString()
                 })
@@ -398,7 +398,7 @@ class TimerService {
                 .eq('status', 'running');
 
             // Log admin action
-            await supabase
+            await db
                 .from('admin_logs')
                 .insert({
                     admin_id: adminId,
@@ -442,7 +442,7 @@ class TimerService {
             const now = new Date();
 
             // Get session details
-            const { data: session, error: fetchError } = await supabase
+            const { data: session, error: fetchError } = await db
                 .from('table_sessions')
                 .select('table_id, table_number')
                 .eq('id', sessionId)
@@ -467,7 +467,7 @@ class TimerService {
             }
 
             // Update timer log
-            await supabase
+            await db
                 .from('table_timer_logs')
                 .update({
                     stopped_by: adminId,
@@ -479,7 +479,7 @@ class TimerService {
                 .in('status', ['running', 'extended']);
 
             // Log admin action
-            await supabase
+            await db
                 .from('admin_logs')
                 .insert({
                     admin_id: adminId,
