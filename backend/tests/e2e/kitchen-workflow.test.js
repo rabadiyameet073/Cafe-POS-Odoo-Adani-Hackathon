@@ -11,13 +11,9 @@
  */
 
 const request = require('supertest');
-const { createClient } = require('@supabase/supabase-js');
+const { db: supabase } = require('../../src/config/db');
 
 const app = require('../../src/app');
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 describe('E2E: Kitchen Workflow', () => {
   let testFloorId;

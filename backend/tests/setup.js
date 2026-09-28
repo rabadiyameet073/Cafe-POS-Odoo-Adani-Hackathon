@@ -14,8 +14,7 @@ jest.setTimeout(60000);
 
 // Global setup
 beforeAll(async () => {
-  console.log('Starting E2E test suite...');
-  console.log('Supabase URL:', process.env.SUPABASE_URL);
+  console.log('Starting E2E test suite with MongoDB...');
 });
 
 // Global teardown
