@@ -1,4 +1,4 @@
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const { formatResponse, parseDateRange } = require('../utils/helpers');
 const { catchAsync, ValidationError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
@@ -8,7 +8,7 @@ const getSalesReport = catchAsync(async (req, res) => {
 
     const { start, end } = parseDateRange(period, start_date, end_date);
 
-    let query = supabase
+    let query = db
         .from('orders')
         .select('id, total_amount, tax_amount, discount_amount, subtotal, created_at')
         .eq('status', 'completed')
@@ -33,7 +33,7 @@ const getSalesReport = catchAsync(async (req, res) => {
             : 0
     };
 
-    const { data: payments } = await supabase
+    const { data: payments } = await db
         .from('payments')
         .select('amount, payment_methods(display_name)')
         .eq('status', 'completed')
@@ -62,7 +62,7 @@ const getProductReport = catchAsync(async (req, res) => {
 
     const { start, end } = parseDateRange(period, start_date, end_date);
 
-    const { data: items, error } = await supabase
+    const { data: items, error } = await db
         .from('order_items')
         .select(`
             quantity, line_total, unit_price,
@@ -108,7 +108,7 @@ const getProductReport = catchAsync(async (req, res) => {
 const getSessionReport = catchAsync(async (req, res) => {
     const { limit = 10 } = req.query;
 
-    const { data: sessions, error } = await supabase
+    const { data: sessions, error } = await db
         .from('pos_sessions')
         .select('*, users(full_name)')
         .order('opened_at', { ascending: false })
@@ -118,7 +118,7 @@ const getSessionReport = catchAsync(async (req, res) => {
 
     const sessionsWithStats = [];
     for (const session of sessions || []) {
-        const { data: orders } = await supabase
+        const { data: orders } = await db
             .from('orders')
             .select('total_amount, status')
             .eq('session_id', session.id);
@@ -146,7 +146,7 @@ const getFeedbackReport = catchAsync(async (req, res) => {
 
     const { start, end } = parseDateRange(period, start_date, end_date);
 
-    const { data: feedbacks, error } = await supabase
+    const { data: feedbacks, error } = await db
         .from('feedback')
         .select('*')
         .gte('created_at', start.toISOString())
