@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import AdminLayout from '../../components/layouts/AdminLayout'
 import { floorService, tableService } from '../../services/api.service'
 import { getFloors as getFloorsDB, getAllTablesWithTimers, forceFreeTaTable, extendTableTimer } from '../../services/cafe.service'
-import { supabase, subscribeToTable, unsubscribeFromChannel } from '../../services/db.service'
+import { db, subscribeToTable, unsubscribeFromChannel } from '../../services/db.service'
 import Loading from '../../components/Loading'
 import { showToast } from '../../components/Toast'
 import Icon from '../../components/Icons'
@@ -57,7 +57,7 @@ const Tables = () => {
 
   const fetchData = async () => {
     // Fetch floors and tables independently so one failure doesn't block the other
-    // Use Supabase-direct calls as primary (always available), backend API as fallback
+    // Use MongoDB-direct calls as primary (always available), backend API as fallback
     try {
       const floorsData = await getFloorsDB()
       setFloors(floorsData || [])
@@ -82,7 +82,7 @@ const Tables = () => {
     } catch (err) {
       // Fallback: simple tables query without sessions
       try {
-        const { data, error } = await supabase.from('tables').select('*, floors(name)').eq('is_active', true).order('table_number', { ascending: true })
+        const { data, error } = await db.from('tables').select('*, floors(name)').eq('is_active', true).order('table_number', { ascending: true })
         if (error) throw error
         setTables((data || []).map(t => ({ ...t, table_sessions: null })))
       } catch {
@@ -103,11 +103,11 @@ const Tables = () => {
         floor_id: formData.floor_id
       }
       if (editingTable) {
-        // Try backend API first, fallback to Supabase-direct
+        // Try backend API first, fallback to MongoDB-direct
         try {
           await tableService.updateTable(editingTable.id, payload)
         } catch {
-          const { error } = await supabase.from('tables').update(payload).eq('id', editingTable.id)
+          const { error } = await db.from('tables').update(payload).eq('id', editingTable.id)
           if (error) throw error
         }
         showToast(`Table ${payload.table_number} updated`)
@@ -116,7 +116,7 @@ const Tables = () => {
           await tableService.createTable(payload)
         } catch {
           const token = 'QR' + Math.random().toString(36).substring(2, 10).toUpperCase()
-          const { error } = await supabase.from('tables').insert({ ...payload, qr_code_token: token, status: 'available', is_active: true })
+          const { error } = await db.from('tables').insert({ ...payload, qr_code_token: token, status: 'available', is_active: true })
           if (error) throw error
         }
         showToast(`Table ${payload.table_number} created`)
@@ -145,7 +145,7 @@ const Tables = () => {
       try {
         await tableService.deleteTable(table.id)
       } catch {
-        const { error } = await supabase.from('tables').update({ is_active: false }).eq('id', table.id)
+        const { error } = await db.from('tables').update({ is_active: false }).eq('id', table.id)
         if (error) throw error
       }
       showToast(`Table ${table.table_number} deleted`)
@@ -160,7 +160,7 @@ const Tables = () => {
       try {
         await tableService.updateTableStatus(tableId, status)
       } catch {
-        const { error } = await supabase.from('tables').update({ status }).eq('id', tableId)
+        const { error } = await db.from('tables').update({ status }).eq('id', tableId)
         if (error) throw error
       }
       showToast('Table status updated')
