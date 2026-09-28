@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import CashierLayout from '../../components/layouts/CashierLayout'
 import { getPendingCashierRequests, approveCashierRequest, rejectCashierRequest } from '../../services/cafe.service'
-import { supabase } from '../../services/db.service'
+import { db } from '../../services/db.service'
 import { subscribeToTable, unsubscribeFromChannel } from '../../services/db.service'
 import { useAuth } from '../../contexts/AuthContext'
 import Loading from '../../components/Loading'
@@ -54,7 +54,7 @@ const Orders = () => {
 
   const fetchHistory = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('cashier_payment_requests')
         .select('*')
         .in('status', ['approved', 'rejected'])
