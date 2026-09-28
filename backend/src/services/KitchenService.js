@@ -7,7 +7,7 @@
  * Requirements: 8.1, 9.1, 9.3
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const OrderService = require('./OrderService');
 const logger = require('../utils/logger');
 
@@ -22,7 +22,7 @@ class KitchenService {
             const now = new Date().toISOString();
 
             // Get order details with items
-            const { data: order, error: orderError } = await supabase
+            const { data: order, error: orderError } = await db
                 .from('orders')
                 .select(`
                     *,
@@ -56,7 +56,7 @@ class KitchenService {
             }));
 
             // Create kitchen order
-            const { data: kitchenOrder, error: kitchenError } = await supabase
+            const { data: kitchenOrder, error: kitchenError } = await db
                 .from('kitchen_orders')
                 .insert({
                     order_id: orderId,
@@ -84,7 +84,7 @@ class KitchenService {
             }
 
             // Update order status
-            await supabase
+            await db
                 .from('orders')
                 .update({
                     status: 'received',
@@ -131,7 +131,7 @@ class KitchenService {
             }
 
             // Get current kitchen order
-            const { data: kitchenOrder, error: fetchError } = await supabase
+            const { data: kitchenOrder, error: fetchError } = await db
                 .from('kitchen_orders')
                 .select('order_id, status, table_number')
                 .eq('id', kitchenOrderId)
@@ -161,7 +161,7 @@ class KitchenService {
             }
 
             // Update kitchen order
-            const { error: updateError } = await supabase
+            const { error: updateError } = await db
                 .from('kitchen_orders')
                 .update(updateData)
                 .eq('id', kitchenOrderId);
@@ -213,7 +213,7 @@ class KitchenService {
      */
     async getKitchenOrders(statusFilter = null) {
         try {
-            let query = supabase
+            let query = db
                 .from('kitchen_orders')
                 .select('*')
                 .order('received_at', { ascending: true }); // Oldest first
@@ -270,7 +270,7 @@ class KitchenService {
      */
     async getKitchenOrderById(kitchenOrderId) {
         try {
-            const { data: order, error } = await supabase
+            const { data: order, error } = await db
                 .from('kitchen_orders')
                 .select('*')
                 .eq('id', kitchenOrderId)
@@ -303,7 +303,7 @@ class KitchenService {
      */
     async getKitchenOrdersByTable(tableNumber) {
         try {
-            const { data: orders, error } = await supabase
+            const { data: orders, error } = await db
                 .from('kitchen_orders')
                 .select('*')
                 .eq('table_number', tableNumber)
@@ -337,7 +337,7 @@ class KitchenService {
      */
     async getKitchenStats() {
         try {
-            const { data: orders, error } = await supabase
+            const { data: orders, error } = await db
                 .from('kitchen_orders')
                 .select('status, received_at')
                 .in('status', ['received', 'preparing', 'ready']);
