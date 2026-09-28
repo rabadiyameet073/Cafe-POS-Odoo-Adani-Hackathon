@@ -633,6 +633,7 @@ function buildStore() {
     ];
     const self_order_tokens = [];
     const audit_logs = [];
+    const admin_logs = audit_logs;
     const reports_cache = [];
 
     return {
@@ -640,7 +641,7 @@ function buildStore() {
         table_sessions, table_timer_logs, orders, order_items, payments,
         cashier_payment_requests, kitchen_orders, feedback, customer_feedback,
         pos_sessions, pos_terminals, payment_methods, self_order_tokens,
-        audit_logs, reports_cache
+        audit_logs, admin_logs, reports_cache
     };
 }
 

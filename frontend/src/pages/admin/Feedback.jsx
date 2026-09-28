@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import AdminLayout from '../../components/layouts/AdminLayout'
-import { getAllFeedback, getFeedbackStats } from '../../services/cafe.service'
+import { getAllFeedback, getFeedbackStats, submitFeedback } from '../../services/cafe.service'
+import { showToast } from '../../components/Toast'
 
 const StarDisplay = ({ rating, max = 5 }) => (
   <div className="flex items-center gap-0.5">
@@ -77,6 +78,52 @@ const Feedback = () => {
     return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
 
+  const handleAddSampleFeedback = async () => {
+    try {
+      const sampleReviews = [
+        {
+          table_number: 'G-2',
+          overall_rating: 5,
+          food_quality_rating: 5,
+          service_speed_rating: 5,
+          waiting_time_rating: 4,
+          ambience_rating: 5,
+          comment: 'Outstanding Caramel Frappe and the live timer system is brilliant! Smooth digital ordering.',
+          suggestions: 'Keep up the fast delivery!'
+        },
+        {
+          table_number: 'F-3',
+          overall_rating: 5,
+          food_quality_rating: 5,
+          service_speed_rating: 5,
+          waiting_time_rating: 5,
+          ambience_rating: 4,
+          comment: 'Masala Chai and Paneer Tikka Sandwich were delicious. Great modern POS experience.',
+          suggestions: 'Would love more dessert items.'
+        },
+        {
+          table_number: 'T-2',
+          overall_rating: 4,
+          food_quality_rating: 4,
+          service_speed_rating: 5,
+          waiting_time_rating: 4,
+          ambience_rating: 5,
+          comment: 'Loved the terrace floor vibe and QR payment was instant!',
+          suggestions: 'Add extra napkins by default.'
+        }
+      ]
+      const chosen = sampleReviews[Math.floor(Math.random() * sampleReviews.length)]
+      await submitFeedback({
+        ...chosen,
+        table_token: 'QR-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+      })
+      showToast('Sample customer review submitted!')
+      await fetchData()
+    } catch (err) {
+      showToast('Failed to submit review', 'error')
+    }
+  }
+
   return (
     <AdminLayout>
       <div className="animate-slide-up">
@@ -86,10 +133,15 @@ const Feedback = () => {
             <h1 className="page-title">Customer Feedback</h1>
             <p className="page-subtitle">All feedback and reviews from customers</p>
           </div>
-          <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:scale-105" style={{ background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.25)', color: 'var(--accent-primary)' }}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-            Refresh
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={handleAddSampleFeedback} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:scale-105" style={{ background: 'rgba(0,255,148,0.1)', border: '1px solid rgba(0,255,148,0.25)', color: 'var(--accent-emerald)' }}>
+              <span>✍️</span> + Demo Review
+            </button>
+            <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:scale-105" style={{ background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.25)', color: 'var(--accent-primary)' }}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              Refresh
+            </button>
+          </div>
         </div>
 
         {loading ? (

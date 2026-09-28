@@ -85,6 +85,7 @@ if (_mongoDb) {
         pos_terminals: schemas.PosTerminal,
         self_order_tokens: schemas.SelfOrderToken,
         audit_logs: schemas.AuditLog,
+        admin_logs: schemas.AuditLog,
         reports_cache: schemas.ReportCache
     };
 }

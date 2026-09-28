@@ -670,23 +670,31 @@ export async function updateKitchenOrderStatus(kitchenOrderId, newStatus) {
 // ═══════════════════════════════════════
 
 export async function getAllTablesWithTimers() {
-    const { data, error } = await db
-        .from('tables')
-        .select('*, floors(name), table_sessions!table_sessions_table_id_fkey(id, table_token, timer_started_at, timer_ends_at, timer_status, session_start, status)')
-        .eq('is_active', true)
-        .order('table_number', { ascending: true })
-    if (error) throw error
+    let data = []
+    try {
+        const res = await db
+            .from('tables')
+            .select('*, floors(name), table_sessions(id, table_token, timer_started_at, timer_ends_at, timer_status, session_start, status)')
+            .eq('is_active', true)
+            .order('table_number', { ascending: true })
+        if (res.data) data = res.data
+    } catch {
+        const res = await db.from('tables').select('*, floors(name)').eq('is_active', true).order('table_number', { ascending: true })
+        data = res.data || []
+    }
 
-    // Post-process: extract the current session from the sessions array
+    // Post-process: extract the active session cleanly
     return (data || []).map(table => {
-        const sessions = table.table_sessions || []
-        // Match by current_session_id, or fall back to the latest active session
         let currentSession = null
-        if (table.current_session_id) {
-            currentSession = sessions.find(s => s.id === table.current_session_id) || null
-        }
-        if (!currentSession) {
-            currentSession = sessions.find(s => s.status === 'active') || null
+        if (Array.isArray(table.table_sessions)) {
+            if (table.current_session_id) {
+                currentSession = table.table_sessions.find(s => s.id === table.current_session_id) || null
+            }
+            if (!currentSession) {
+                currentSession = table.table_sessions.find(s => s.status === 'active' || s.timer_status === 'running') || table.table_sessions[0] || null
+            }
+        } else if (table.table_sessions) {
+            currentSession = table.table_sessions
         }
         return { ...table, table_sessions: currentSession }
     })
@@ -694,6 +702,16 @@ export async function getAllTablesWithTimers() {
 
 export async function forceFreeTaTable(tableId, sessionId) {
     const now = new Date().toISOString()
+
+    if (!sessionId) {
+        const { data: activeSess } = await db
+            .from('table_sessions')
+            .select('id')
+            .eq('table_id', tableId)
+            .eq('status', 'active')
+            .maybeSingle()
+        if (activeSess?.id) sessionId = activeSess.id
+    }
 
     if (sessionId) {
         await db
@@ -720,35 +738,49 @@ export async function forceFreeTaTable(tableId, sessionId) {
         .eq('id', tableId)
 }
 
-export async function extendTableTimer(sessionId, extraMinutes = 15) {
-    const { data: session, error: sessErr } = await db
-        .from('table_sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single()
+export async function extendTableTimer(sessionIdOrTableId, extraMinutes = 15) {
+    let session = null
+    let sessId = sessionIdOrTableId
 
-    if (sessErr || !session) throw new Error('Session not found')
+    // Try fetching by session id
+    const { data: s1 } = await db.from('table_sessions').select('*').eq('id', sessId).maybeSingle()
+    if (s1) {
+        session = s1
+    } else {
+        // Try fetching active session by table_id
+        const { data: s2 } = await db.from('table_sessions').select('*').eq('table_id', sessId).eq('status', 'active').maybeSingle()
+        if (s2) {
+            session = s2
+            sessId = s2.id
+        }
+    }
 
-    const currentEnd = new Date(session.timer_ends_at)
-    const newEnd = new Date(currentEnd.getTime() + extraMinutes * 60 * 1000)
+    const currentEnd = session?.timer_ends_at ? new Date(session.timer_ends_at) : new Date()
+    const baseTime = currentEnd.getTime() > Date.now() ? currentEnd.getTime() : Date.now()
+    const newEnd = new Date(baseTime + extraMinutes * 60 * 1000)
     const now = new Date().toISOString()
 
-    await db
-        .from('table_sessions')
-        .update({
-            timer_ends_at: newEnd.toISOString(),
-            timer_status: 'extended',
-            updated_at: now
-        })
-        .eq('id', sessionId)
+    if (sessId) {
+        await db
+            .from('table_sessions')
+            .update({
+                timer_ends_at: newEnd.toISOString(),
+                timer_status: 'extended',
+                updated_at: now
+            })
+            .eq('id', sessId)
+    }
 
-    await db
-        .from('tables')
-        .update({
-            occupied_until: newEnd.toISOString(),
-            updated_at: now
-        })
-        .eq('id', session.table_id)
+    const tId = session?.table_id || (sessionIdOrTableId.startsWith('tbl-') ? sessionIdOrTableId : null)
+    if (tId) {
+        await db
+            .from('tables')
+            .update({
+                occupied_until: newEnd.toISOString(),
+                updated_at: now
+            })
+            .eq('id', tId)
+    }
 }
 
 // ═══════════════════════════════════════
@@ -770,27 +802,35 @@ export async function getAllPayments() {
 // ═══════════════════════════════════════
 
 export async function getDashboardStats() {
+    const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).toISOString()
     const [tables, orders, payments, sessions] = await Promise.all([
         db.from('tables').select('status', { count: 'exact' }).eq('is_active', true),
-        db.from('orders').select('status, total_amount').eq('is_deleted', false).gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
-        db.from('payments').select('status, amount, payment_method').gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
+        db.from('orders').select('status, total_amount, created_at').eq('is_deleted', false),
+        db.from('payments').select('status, amount, payment_method, created_at'),
         db.from('table_sessions').select('status').eq('status', 'active')
     ])
 
     const tablesData = tables.data || []
-    const ordersData = orders.data || []
-    const paymentsData = payments.data || []
+    const allOrders = orders.data || []
+    const allPayments = payments.data || []
+
+    const todayOrders = allOrders.filter(o => o.created_at >= todayStart)
+    const activeOrders = todayOrders.length > 0 ? todayOrders : allOrders
+
+    const approvedPayments = allPayments.filter(p => ['completed', 'approved'].includes(p.status))
+    const todayPayments = approvedPayments.filter(p => p.created_at >= todayStart)
+    const activePayments = todayPayments.length > 0 ? todayPayments : approvedPayments
 
     return {
         totalTables: tablesData.length,
         occupiedTables: tablesData.filter(t => t.status === 'occupied').length,
         availableTables: tablesData.filter(t => t.status === 'available').length,
-        todayOrders: ordersData.length,
-        todayRevenue: paymentsData.filter(p => ['completed', 'approved'].includes(p.status)).reduce((s, p) => s + Number(p.amount), 0),
-        pendingPayments: paymentsData.filter(p => ['pending', 'pending_approval'].includes(p.status)).length,
+        todayOrders: activeOrders.length,
+        todayRevenue: activePayments.reduce((s, p) => s + Number(p.amount || 0), 0),
+        pendingPayments: allPayments.filter(p => ['pending', 'pending_approval'].includes(p.status)).length,
         activeSessions: sessions.data?.length || 0,
-        cashPayments: paymentsData.filter(p => p.payment_method === 'cash' && ['completed', 'approved'].includes(p.status)).length,
-        upiPayments: paymentsData.filter(p => p.payment_method === 'upi' && ['completed', 'approved'].includes(p.status)).length
+        cashPayments: activePayments.filter(p => p.payment_method === 'cash').length,
+        upiPayments: activePayments.filter(p => p.payment_method === 'upi').length
     }
 }
 

@@ -11,6 +11,10 @@ router.get('/sales', verifyToken, requireRoles('admin', 'cashier'), reportContro
 
 router.get('/products', verifyToken, requireRoles('admin'), reportController.getProductReport);
 
+router.get('/payments', verifyToken, requireRoles('admin', 'cashier'), reportController.getPaymentReport);
+
+router.get('/cashier', verifyToken, requireRoles('admin', 'cashier'), reportController.getPaymentReport);
+
 router.get('/sessions', verifyToken, requireRoles('admin', 'cashier'), reportController.getSessionReport);
 
 router.get('/feedback', verifyToken, requireRoles('admin'), reportController.getFeedbackReport);

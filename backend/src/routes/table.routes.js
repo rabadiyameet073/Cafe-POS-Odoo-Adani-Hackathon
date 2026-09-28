@@ -15,12 +15,14 @@ router.get('/floor/:floorId', optionalAuth, validateUUIDParam('floorId'), tableC
 router.get('/:id', optionalAuth, validateUUIDParam('id'), tableController.getTableById);
 
 router.post('/', verifyToken, requireAdmin, auditAdminAction('create_table'), tableController.createTable);
+router.post('/create', verifyToken, requireAdmin, auditAdminAction('create_table'), tableController.createTable);
 
 router.post('/select', optionalAuth, tableController.selectTable);
 
 router.post('/release', verifyToken, requireCashier, auditAdminAction('release_table'), tableController.releaseTable);
 
 router.put('/:id', verifyToken, validateUUIDParam('id'), requireAdmin, auditAdminAction('update_table'), tableController.updateTable);
+router.put('/:id/floor', verifyToken, validateUUIDParam('id'), requireAdmin, auditAdminAction('update_table_floor'), tableController.updateTable);
 
 router.patch('/:id/status', verifyToken, validateUUIDParam('id'), requireCashier, auditAdminAction('update_table_status'), tableController.updateTableStatus);
 

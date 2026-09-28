@@ -17,6 +17,7 @@ const Products = () => {
     category_id: '',
     price: '',
     description: '',
+    image_url: '',
     is_available: true
   })
 
@@ -46,6 +47,9 @@ const Products = () => {
     try {
       const cats = await getCategoriesDB()
       setCategories(cats || [])
+      if (cats && cats.length > 0 && !formData.category_id) {
+        setFormData(prev => ({ ...prev, category_id: cats[0].id }))
+      }
     } catch {
       try {
         const res = await categoryService.getAllCategories()
@@ -59,30 +63,30 @@ const Products = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
+      const fallbackImg = 'https://images.unsplash.com/photo-1541167760496-1628856ab772?w=500'
+      const payload = {
+        name: formData.name,
+        category_id: formData.category_id,
+        price: Number(formData.price),
+        description: formData.description,
+        image_url: formData.image_url || fallbackImg,
+        is_available: formData.is_available
+      }
+
       if (editingProduct) {
         try {
-          await productService.updateProduct(editingProduct.id, formData)
+          await productService.updateProduct(editingProduct.id, payload)
         } catch {
-          const { error } = await db.from('products').update({
-            name: formData.name,
-            category_id: formData.category_id,
-            price: Number(formData.price),
-            description: formData.description,
-            is_available: formData.is_available
-          }).eq('id', editingProduct.id)
+          const { error } = await db.from('products').update(payload).eq('id', editingProduct.id)
           if (error) throw error
         }
         showToast('Product updated successfully')
       } else {
         try {
-          await productService.createProduct(formData)
+          await productService.createProduct(payload)
         } catch {
           const { error } = await db.from('products').insert({
-            name: formData.name,
-            category_id: formData.category_id,
-            price: Number(formData.price),
-            description: formData.description,
-            is_available: formData.is_available,
+            ...payload,
             is_active: true
           })
           if (error) throw error
@@ -104,6 +108,7 @@ const Products = () => {
       category_id: product.category_id,
       price: product.price,
       description: product.description || '',
+      image_url: product.image_url || '',
       is_available: product.is_available
     })
     setShowModal(true)
@@ -278,7 +283,17 @@ const Products = () => {
                       value={formData.description}
                       onChange={e => setFormData({ ...formData, description: e.target.value })}
                       className="input-field"
-                      rows="3"
+                      rows="2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'var(--text-muted)' }}>Image URL (Optional)</label>
+                    <input
+                      type="url"
+                      placeholder="https://images.unsplash.com/..."
+                      value={formData.image_url}
+                      onChange={e => setFormData({ ...formData, image_url: e.target.value })}
+                      className="input-field"
                     />
                   </div>
                   <div className="flex items-center gap-3">

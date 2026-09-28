@@ -247,6 +247,61 @@ class TimerService {
     }
 
     /**
+     * Get all active timers
+     * @returns {Promise<Object>} Result with array of active timer sessions
+     */
+    async getActiveTimers() {
+        try {
+            const { data: sessions, error } = await db
+                .from('table_sessions')
+                .select('*')
+                .in('status', ['active', 'occupied'])
+                .order('timer_ends_at', { ascending: true });
+
+            if (error) {
+                logger.error('Error fetching active timers:', error);
+                return { success: false, error: error.message };
+            }
+
+            const now = Date.now();
+            const timers = [];
+
+            for (const sess of (sessions || [])) {
+                let tableNumber = sess.table_number;
+                if (!tableNumber && sess.table_id) {
+                    const { data: tbl } = await db.from('tables').select('table_number').eq('id', sess.table_id).single();
+                    if (tbl) tableNumber = tbl.table_number;
+                }
+
+                const endsAt = sess.timer_ends_at ? new Date(sess.timer_ends_at).getTime() : (now + 39 * 60 * 1000);
+                const remainingSeconds = Math.max(0, Math.floor((endsAt - now) / 1000));
+
+                timers.push({
+                    sessionId: sess.id,
+                    tableId: sess.table_id,
+                    tableNumber: tableNumber || 'Table',
+                    timerStartedAt: sess.timer_started_at || sess.session_start,
+                    timerEndsAt: sess.timer_ends_at,
+                    remainingSeconds,
+                    status: sess.timer_status || 'running'
+                });
+            }
+
+            return {
+                success: true,
+                timers,
+                count: timers.length
+            };
+        } catch (err) {
+            logger.error('Error in getActiveTimers:', err);
+            return {
+                success: false,
+                error: err.message
+            };
+        }
+    }
+
+    /**
      * Reset timer to 39 minutes from now
      * @param {string} sessionId - UUID of the session
      * @param {string} adminId - UUID of the admin

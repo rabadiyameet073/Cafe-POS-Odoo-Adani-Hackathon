@@ -21,8 +21,10 @@ function validate(req, res, next) {
 }
 
 function isValidUUID(value) {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(value);
+    if (!value || typeof value !== 'string') return false;
+    const str = value.trim();
+    // Allow standard UUID, MongoDB ObjectId (24 hex), or custom slug/code IDs (e.g., tbl-g1, fl-ground, ORD-1001, c1, p1)
+    return /^[a-zA-Z0-9_\-:]{1,64}$/.test(str);
 }
 
 function validateUUIDParam(paramName) {

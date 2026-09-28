@@ -28,7 +28,8 @@ const Reports = () => {
         case 'payments': res = await reportService.getPaymentReport(dateRange); break
         default: res = await reportService.getSalesReport(dateRange)
       }
-      setReportData(res.data)
+      const payload = res.data?.data ? res.data : (res.data || res)
+      setReportData(payload)
     } catch {
       // Fallback: build basic report from MongoDB-direct queries
       try {
@@ -41,6 +42,25 @@ const Reports = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const exportToCSV = () => {
+    if (!reportData?.data || !Array.isArray(reportData.data) || reportData.data.length === 0) {
+      showToast('No data to export', 'error')
+      return
+    }
+    const headers = Object.keys(reportData.data[0])
+    const rows = reportData.data.map(row => headers.map(h => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(','))
+    const csvContent = [headers.join(','), ...rows].join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `${activeTab}_report_${dateRange.start_date}_to_${dateRange.end_date}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    showToast(`Exported ${activeTab} report to CSV`)
   }
 
   const buildFallbackReport = async (type, range) => {
@@ -112,16 +132,25 @@ const Reports = () => {
       <div className="animate-slide-up">
         <h1 className="page-title mb-6">Reports & Analytics</h1>
 
-        {/* Date Range */}
-        <div className="section-card p-4 mb-6 flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-[var(--text-muted)]">From:</label>
-            <input type="date" value={dateRange.start_date} onChange={(e) => setDateRange({ ...dateRange, start_date: e.target.value })} className="input-field text-sm" />
+        {/* Date Range & Actions */}
+        <div className="section-card p-4 mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-[var(--text-muted)]">From:</label>
+              <input type="date" value={dateRange.start_date} onChange={(e) => setDateRange({ ...dateRange, start_date: e.target.value })} className="input-field text-sm" />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-[var(--text-muted)]">To:</label>
+              <input type="date" value={dateRange.end_date} onChange={(e) => setDateRange({ ...dateRange, end_date: e.target.value })} className="input-field text-sm" />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-[var(--text-muted)]">To:</label>
-            <input type="date" value={dateRange.end_date} onChange={(e) => setDateRange({ ...dateRange, end_date: e.target.value })} className="input-field text-sm" />
-          </div>
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:scale-105"
+            style={{ background: 'rgba(0,255,148,0.1)', border: '1px solid rgba(0,255,148,0.25)', color: 'var(--accent-emerald)' }}
+          >
+            <span>📥</span> Export CSV
+          </button>
         </div>
 
         {/* Tabs */}

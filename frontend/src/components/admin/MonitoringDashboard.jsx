@@ -11,7 +11,7 @@ import axios from 'axios';
 import './MonitoringDashboard.css';
 import Icon from '../Icons'
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '');
 
 function MonitoringDashboard() {
     const [metrics, setMetrics] = useState(null);

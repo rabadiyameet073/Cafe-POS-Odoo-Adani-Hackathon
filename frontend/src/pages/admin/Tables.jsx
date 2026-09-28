@@ -24,12 +24,20 @@ const Tables = () => {
   const [editingTable, setEditingTable] = useState(null)
   const [formData, setFormData] = useState({ table_number: '', seats: 4, floor_id: '' })
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => {
+    fetchData()
+    const poll = setInterval(fetchData, 5000)
+    return () => clearInterval(poll)
+  }, [])
 
   // Real-time subscription
   useEffect(() => {
     const sub = subscribeToTable('tables', null, () => fetchData())
-    return () => unsubscribeFromChannel(sub)
+    const sub2 = subscribeToTable('table_sessions', null, () => fetchData())
+    return () => {
+      unsubscribeFromChannel(sub)
+      unsubscribeFromChannel(sub2)
+    }
   }, [])
 
   // Live countdown timer per occupied table
@@ -173,7 +181,8 @@ const Tables = () => {
   const handleForceFree = async (table) => {
     if (!confirm(`Free Table ${table.table_number}? This will end the session.`)) return
     try {
-      await forceFreeTaTable(table.id, table.current_session_id)
+      const sessId = table.current_session_id || table.table_sessions?.id
+      await forceFreeTaTable(table.id, sessId)
       showToast(`Table ${table.table_number} freed`)
       fetchData()
     } catch (err) {
@@ -182,9 +191,9 @@ const Tables = () => {
   }
 
   const handleExtend = async (table) => {
-    if (!table.current_session_id) return
+    const sessId = table.current_session_id || table.table_sessions?.id || table.id
     try {
-      await extendTableTimer(table.current_session_id, 15)
+      await extendTableTimer(sessId, 15)
       showToast(`Table ${table.table_number} extended by 15 minutes`)
       fetchData()
     } catch (err) {
