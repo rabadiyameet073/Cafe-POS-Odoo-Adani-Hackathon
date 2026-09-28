@@ -10,7 +10,7 @@
  */
 
 const request = require('supertest');
-const { db: supabase } = require('../../src/config/db');
+const { db } = require('../../src/config/db');
 
 const app = require('../../src/app');
 
@@ -25,7 +25,7 @@ describe('E2E: UPI Payment Flow', () => {
 
   beforeAll(async () => {
     // Create test floor
-    const { data: floor } = await supabase
+    const { data: floor } = await db
       .from('floors')
       .insert({
         name: `UPI Test Floor ${Date.now()}`,
@@ -37,7 +37,7 @@ describe('E2E: UPI Payment Flow', () => {
     testFloorId = floor.id;
 
     // Create test table
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -51,7 +51,7 @@ describe('E2E: UPI Payment Flow', () => {
     testTableId = table.id;
 
     // Create test product
-    const { data: category } = await supabase
+    const { data: category } = await db
       .from('product_categories')
       .insert({
         name: `UPI Category ${Date.now()}`,
@@ -60,7 +60,7 @@ describe('E2E: UPI Payment Flow', () => {
       .select()
       .single();
 
-    const { data: product } = await supabase
+    const { data: product } = await db
       .from('products')
       .insert({
         category_id: category.id,
@@ -75,14 +75,14 @@ describe('E2E: UPI Payment Flow', () => {
     testProductId = product.id;
 
     // Ensure UPI payment method exists
-    const { data: existingUPI } = await supabase
+    const { data: existingUPI } = await db
       .from('payment_methods')
       .select('*')
       .eq('name', 'upi')
       .single();
 
     if (!existingUPI) {
-      await supabase
+      await db
         .from('payment_methods')
         .insert({
           name: 'upi',
@@ -97,13 +97,13 @@ describe('E2E: UPI Payment Flow', () => {
   afterAll(async () => {
     // Cleanup
     if (testTableId) {
-      await supabase.from('tables').delete().eq('id', testTableId);
+      await db.from('tables').delete().eq('id', testTableId);
     }
     if (testFloorId) {
-      await supabase.from('floors').delete().eq('id', testFloorId);
+      await db.from('floors').delete().eq('id', testFloorId);
     }
     if (testProductId) {
-      await supabase.from('products').delete().eq('id', testProductId);
+      await db.from('products').delete().eq('id', testProductId);
     }
   });
 
@@ -188,7 +188,7 @@ describe('E2E: UPI Payment Flow', () => {
 
     // Verify payment status updated
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: payment } = await supabase
+    const { data: payment } = await db
       .from('payments')
       .select('status, payment_method, cashier_name, payment_confirmed_at')
       .eq('id', paymentId)
@@ -201,7 +201,7 @@ describe('E2E: UPI Payment Flow', () => {
 
     // Step 6: Verify kitchen receives order
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: kitchenOrder } = await supabase
+    const { data: kitchenOrder } = await db
       .from('kitchen_orders')
       .select('*')
       .eq('order_id', orderId)
@@ -231,7 +231,7 @@ describe('E2E: UPI Payment Flow', () => {
 
     // Verify final order status
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: finalOrder } = await supabase
+    const { data: finalOrder } = await db
       .from('orders')
       .select('status')
       .eq('id', orderId)
@@ -240,7 +240,7 @@ describe('E2E: UPI Payment Flow', () => {
     expect(finalOrder.status).toBe('served');
 
     // Verify timer is running
-    const { data: session } = await supabase
+    const { data: session } = await db
       .from('table_sessions')
       .select('timer_status, timer_started_at')
       .eq('table_token', tableToken)
@@ -252,7 +252,7 @@ describe('E2E: UPI Payment Flow', () => {
 
   it('should validate QR code format for all UPI apps', async () => {
     // Create a minimal order for QR testing
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -309,12 +309,12 @@ describe('E2E: UPI Payment Flow', () => {
     expect(params.get('cu')).toBe('INR'); // Currency
 
     // Cleanup
-    await supabase.from('tables').delete().eq('id', table.id);
+    await db.from('tables').delete().eq('id', table.id);
   }, 30000);
 
   it('should reject payment verification with mismatched amount', async () => {
     // Create order
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -368,6 +368,6 @@ describe('E2E: UPI Payment Flow', () => {
     expect(verifyResponse.body.error).toBeDefined();
 
     // Cleanup
-    await supabase.from('tables').delete().eq('id', table.id);
+    await db.from('tables').delete().eq('id', table.id);
   }, 30000);
 });
