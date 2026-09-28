@@ -6,7 +6,7 @@
  * Requirements: 2.2, 2.3, 13.1, 13.2
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const TableTokenService = require('./TableTokenService');
 const logger = require('../utils/logger');
 
@@ -22,7 +22,7 @@ class TableService {
     async selectTable(tableId, customerId = null, customerName = null, ipAddress = 'unknown') {
         try {
             // Check if table exists and is available
-            const { data: table, error: tableError } = await supabase
+            const { data: table, error: tableError } = await db
                 .from('tables')
                 .select('*, floors(name)')
                 .eq('id', tableId)
@@ -57,7 +57,7 @@ class TableService {
             const now = new Date().toISOString();
 
             // Create table session with token signature
-            const { data: session, error: sessionError } = await supabase
+            const { data: session, error: sessionError } = await db
                 .from('table_sessions')
                 .insert({
                     table_id: tableId,
@@ -85,7 +85,7 @@ class TableService {
             }
 
             // Update table status to occupied
-            const { error: updateError } = await supabase
+            const { error: updateError } = await db
                 .from('tables')
                 .update({
                     status: 'occupied',
@@ -99,7 +99,7 @@ class TableService {
             if (updateError) {
                 logger.error('Error updating table status:', updateError);
                 // Rollback: delete the session
-                await supabase
+                await db
                     .from('table_sessions')
                     .delete()
                     .eq('id', session.id);
@@ -143,7 +143,7 @@ class TableService {
             const now = new Date().toISOString();
 
             // Get current session
-            const { data: table, error: tableError } = await supabase
+            const { data: table, error: tableError } = await db
                 .from('tables')
                 .select('current_session_id, table_number, qr_code_token')
                 .eq('id', tableId)
@@ -164,7 +164,7 @@ class TableService {
             }
 
             // Update table status to available
-            const { error: updateTableError } = await supabase
+            const { error: updateTableError } = await db
                 .from('tables')
                 .update({
                     status: 'available',
@@ -203,7 +203,7 @@ class TableService {
                 sessionUpdate.timer_status = 'expired';
             }
 
-            const { error: sessionError } = await supabase
+            const { error: sessionError } = await db
                 .from('table_sessions')
                 .update(sessionUpdate)
                 .eq('id', table.current_session_id);
@@ -213,7 +213,7 @@ class TableService {
             }
 
             // Update timer log if exists
-            await supabase
+            await db
                 .from('table_timer_logs')
                 .update({
                     status: reason === 'timer_expired' ? 'expired' : 'stopped',
@@ -248,7 +248,7 @@ class TableService {
      */
     async getAvailableTables(floorId = null) {
         try {
-            let query = supabase
+            let query = db
                 .from('tables')
                 .select('*, floors(id, name)')
                 .eq('status', 'available')
@@ -308,7 +308,7 @@ class TableService {
                 };
             }
 
-            const { data: table, error } = await supabase
+            const { data: table, error } = await db
                 .from('tables')
                 .select('*, floors(name)')
                 .eq('id', validation.tableId)
@@ -342,7 +342,7 @@ class TableService {
      */
     async getTablesByFloor(floorId) {
         try {
-            const { data: tables, error } = await supabase
+            const { data: tables, error } = await db
                 .from('tables')
                 .select('*, table_sessions!current_session_id(*)')
                 .eq('floor_id', floorId)
