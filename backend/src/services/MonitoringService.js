@@ -6,7 +6,7 @@
  * Requirements: Reliability NFR 1
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 class MonitoringService {
@@ -89,7 +89,7 @@ class MonitoringService {
     async getHealthMetrics() {
         try {
             // Get active timers count
-            const { data: activeSessions, error: sessionError } = await supabase
+            const { data: activeSessions, error: sessionError } = await db
                 .from('table_sessions')
                 .select('id', { count: 'exact', head: true })
                 .eq('timer_status', 'running')
@@ -100,7 +100,7 @@ class MonitoringService {
             }
 
             // Get database connection status
-            const { data: dbTest, error: dbError } = await supabase
+            const { data: dbTest, error: dbError } = await db
                 .from('tables')
                 .select('id', { count: 'exact', head: true })
                 .limit(1);
@@ -185,7 +185,7 @@ class MonitoringService {
             }
 
             // Get payment statistics
-            const { data: payments, error } = await supabase
+            const { data: payments, error } = await db
                 .from('payments')
                 .select('status, payment_method, amount, created_at')
                 .gte('created_at', fromDate.toISOString());
@@ -251,7 +251,7 @@ class MonitoringService {
             // Get completed sessions from the last 24 hours
             const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-            const { data: sessions, error } = await supabase
+            const { data: sessions, error } = await db
                 .from('table_sessions')
                 .select('timer_started_at, timer_ends_at, session_end, status')
                 .gte('session_end', yesterday.toISOString())
