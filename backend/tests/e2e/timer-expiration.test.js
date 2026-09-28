@@ -10,7 +10,7 @@
  */
 
 const request = require('supertest');
-const { db: supabase } = require('../../src/config/db');
+const { db } = require('../../src/config/db');
 
 const app = require('../../src/app');
 
@@ -21,7 +21,7 @@ describe('E2E: Timer Expiration', () => {
 
   beforeAll(async () => {
     // Create test cashier
-    const { data: cashier } = await supabase
+    const { data: cashier } = await db
       .from('users')
       .insert({
         email: `timer-cashier-${Date.now()}@test.com`,
@@ -35,7 +35,7 @@ describe('E2E: Timer Expiration', () => {
     cashierId = cashier.id;
 
     // Create test floor
-    const { data: floor } = await supabase
+    const { data: floor } = await db
       .from('floors')
       .insert({
         name: `Timer Floor ${Date.now()}`,
@@ -47,7 +47,7 @@ describe('E2E: Timer Expiration', () => {
     testFloorId = floor.id;
 
     // Create test product
-    const { data: category } = await supabase
+    const { data: category } = await db
       .from('product_categories')
       .insert({
         name: `Timer Category ${Date.now()}`,
@@ -56,7 +56,7 @@ describe('E2E: Timer Expiration', () => {
       .select()
       .single();
 
-    const { data: product } = await supabase
+    const { data: product } = await db
       .from('products')
       .insert({
         category_id: category.id,
@@ -74,19 +74,19 @@ describe('E2E: Timer Expiration', () => {
   afterAll(async () => {
     // Cleanup
     if (testFloorId) {
-      await supabase.from('floors').delete().eq('id', testFloorId);
+      await db.from('floors').delete().eq('id', testFloorId);
     }
     if (testProductId) {
-      await supabase.from('products').delete().eq('id', testProductId);
+      await db.from('products').delete().eq('id', testProductId);
     }
     if (cashierId) {
-      await supabase.from('users').delete().eq('id', cashierId);
+      await db.from('users').delete().eq('id', cashierId);
     }
   });
 
   it('should start timer after payment confirmation', async () => {
     // Create table and order
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -120,7 +120,7 @@ describe('E2E: Timer Expiration', () => {
       .expect(200);
 
     // Verify timer NOT started before payment
-    const { data: sessionBefore } = await supabase
+    const { data: sessionBefore } = await db
       .from('table_sessions')
       .select('timer_status, timer_started_at, timer_ends_at')
       .eq('table_token', tableToken)
@@ -152,7 +152,7 @@ describe('E2E: Timer Expiration', () => {
 
     // Verify timer started after payment
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: sessionAfter } = await supabase
+    const { data: sessionAfter } = await db
       .from('table_sessions')
       .select('timer_status, timer_started_at, timer_ends_at')
       .eq('table_token', tableToken)
@@ -171,7 +171,7 @@ describe('E2E: Timer Expiration', () => {
     expect(durationMinutes).toBeCloseTo(39, 0);
 
     // Verify table occupied_until is set
-    const { data: tableAfter } = await supabase
+    const { data: tableAfter } = await db
       .from('tables')
       .select('occupied_until')
       .eq('id', table.id)
@@ -181,12 +181,12 @@ describe('E2E: Timer Expiration', () => {
     expect(new Date(tableAfter.occupied_until).getTime()).toBeCloseTo(endTime.getTime(), -3);
 
     // Cleanup
-    await supabase.from('tables').delete().eq('id', table.id);
+    await db.from('tables').delete().eq('id', table.id);
   }, 60000);
 
   it('should display timer countdown correctly', async () => {
     // Create table with timer
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -267,12 +267,12 @@ describe('E2E: Timer Expiration', () => {
     expect(timer.remaining_seconds - timer2.remaining_seconds).toBeLessThanOrEqual(3);
 
     // Cleanup
-    await supabase.from('tables').delete().eq('id', table.id);
+    await db.from('tables').delete().eq('id', table.id);
   }, 60000);
 
   it('should automatically release table when timer expires', async () => {
     // Create table with very short timer for testing
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -325,7 +325,7 @@ describe('E2E: Timer Expiration', () => {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     // Get session
-    const { data: session } = await supabase
+    const { data: session } = await db
       .from('table_sessions')
       .select('id')
       .eq('table_token', tableToken)
@@ -335,14 +335,14 @@ describe('E2E: Timer Expiration', () => {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 2000);
 
-    await supabase
+    await db
       .from('table_sessions')
       .update({
         timer_ends_at: expiresAt.toISOString()
       })
       .eq('id', session.id);
 
-    await supabase
+    await db
       .from('tables')
       .update({
         occupied_until: expiresAt.toISOString()
@@ -350,7 +350,7 @@ describe('E2E: Timer Expiration', () => {
       .eq('id', table.id);
 
     // Verify table is occupied
-    const { data: occupiedTable } = await supabase
+    const { data: occupiedTable } = await db
       .from('tables')
       .select('status')
       .eq('id', table.id)
@@ -374,7 +374,7 @@ describe('E2E: Timer Expiration', () => {
 
     // Verify table is now available
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: freedTable } = await supabase
+    const { data: freedTable } = await db
       .from('tables')
       .select('status, qr_code_token, current_session_id, occupied_since, occupied_until')
       .eq('id', table.id)
@@ -387,7 +387,7 @@ describe('E2E: Timer Expiration', () => {
     expect(freedTable.occupied_until).toBeNull();
 
     // Verify session is expired
-    const { data: expiredSession } = await supabase
+    const { data: expiredSession } = await db
       .from('table_sessions')
       .select('status, timer_status, session_end')
       .eq('id', session.id)
@@ -410,12 +410,12 @@ describe('E2E: Timer Expiration', () => {
     expect(tokenValidation.body.error).toContain('token');
 
     // Cleanup
-    await supabase.from('tables').delete().eq('id', table.id);
+    await db.from('tables').delete().eq('id', table.id);
   }, 60000);
 
   it('should archive session data when timer expires', async () => {
     // Create table
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -467,7 +467,7 @@ describe('E2E: Timer Expiration', () => {
 
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const { data: session } = await supabase
+    const { data: session } = await db
       .from('table_sessions')
       .select('*')
       .eq('table_token', tableToken)
@@ -486,7 +486,7 @@ describe('E2E: Timer Expiration', () => {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     // Verify session data is preserved (archived)
-    const { data: archivedSession } = await supabase
+    const { data: archivedSession } = await db
       .from('table_sessions')
       .select('*')
       .eq('id', session.id)
@@ -501,7 +501,7 @@ describe('E2E: Timer Expiration', () => {
     expect(archivedSession.table_token).toBe(tableToken);
 
     // Verify timer log exists
-    const { data: timerLog } = await supabase
+    const { data: timerLog } = await db
       .from('table_timer_logs')
       .select('*')
       .eq('session_id', session.id)
@@ -511,13 +511,13 @@ describe('E2E: Timer Expiration', () => {
     expect(timerLog.status).toBe('expired');
 
     // Cleanup
-    await supabase.from('tables').delete().eq('id', table.id);
+    await db.from('tables').delete().eq('id', table.id);
   }, 60000);
 
   it('should reset timer if payment confirmed again on same table', async () => {
     // This tests the requirement: "IF a Timer already exists for a table, THEN THE System SHALL reset the Timer to 39 minutes"
     
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -568,7 +568,7 @@ describe('E2E: Timer Expiration', () => {
 
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const { data: session1 } = await supabase
+    const { data: session1 } = await db
       .from('table_sessions')
       .select('timer_ends_at')
       .eq('table_token', selection1.body.table_token)
@@ -613,7 +613,7 @@ describe('E2E: Timer Expiration', () => {
 
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const { data: session2 } = await supabase
+    const { data: session2 } = await db
       .from('table_sessions')
       .select('timer_ends_at')
       .eq('table_token', selection1.body.table_token)
@@ -633,6 +633,6 @@ describe('E2E: Timer Expiration', () => {
     expect(remainingMinutes).toBeLessThanOrEqual(39);
 
     // Cleanup
-    await supabase.from('tables').delete().eq('id', table.id);
+    await db.from('tables').delete().eq('id', table.id);
   }, 60000);
 });
