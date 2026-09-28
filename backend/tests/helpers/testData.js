@@ -4,14 +4,14 @@
  * Utilities for creating and managing test data
  */
 
-const { db: supabase } = require('../../src/config/db');
+const { db } = require('../../src/config/db');
 
 /**
  * Create a test user with proper error handling
  */
 async function createTestUser(role = 'customer', emailPrefix = 'test') {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('users')
       .insert({
         email: `${emailPrefix}-${Date.now()}-${Math.random().toString(36).substring(7)}@test.com`,
@@ -26,7 +26,7 @@ async function createTestUser(role = 'customer', emailPrefix = 'test') {
     if (error) {
       console.error(`Error creating test ${role}:`, error);
       // If user creation fails, try to find an existing user with that role
-      const { data: existingUser } = await supabase
+      const { data: existingUser } = await db
         .from('users')
         .select('*')
         .eq('role', role)
@@ -53,7 +53,7 @@ async function createTestUser(role = 'customer', emailPrefix = 'test') {
  * Create a test floor
  */
 async function createTestFloor(name = null) {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('floors')
     .insert({
       name: name || `Test Floor ${Date.now()}`,
@@ -74,7 +74,7 @@ async function createTestFloor(name = null) {
  * Create a test table
  */
 async function createTestTable(floorId, tableNumber = null) {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('tables')
     .insert({
       floor_id: floorId,
@@ -100,7 +100,7 @@ async function createTestProduct(categoryId = null, price = 100.00) {
   let catId = categoryId;
   
   if (!catId) {
-    const { data: category, error: catError } = await supabase
+    const { data: category, error: catError } = await db
       .from('product_categories')
       .insert({
         name: `Test Category ${Date.now()}`,
@@ -116,7 +116,7 @@ async function createTestProduct(categoryId = null, price = 100.00) {
     catId = category.id;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('products')
     .insert({
       category_id: catId,
@@ -144,19 +144,19 @@ async function cleanupTestData(ids) {
 
   // Delete in reverse order of dependencies
   for (const id of tableIds) {
-    await supabase.from('tables').delete().eq('id', id);
+    await db.from('tables').delete().eq('id', id);
   }
 
   for (const id of floorIds) {
-    await supabase.from('floors').delete().eq('id', id);
+    await db.from('floors').delete().eq('id', id);
   }
 
   for (const id of productIds) {
-    await supabase.from('products').delete().eq('id', id);
+    await db.from('products').delete().eq('id', id);
   }
 
   for (const id of userIds) {
-    await supabase.from('users').delete().eq('id', id);
+    await db.from('users').delete().eq('id', id);
   }
 }
 
@@ -164,14 +164,14 @@ async function cleanupTestData(ids) {
  * Ensure UPI payment method exists
  */
 async function ensureUPIPaymentMethod() {
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from('payment_methods')
     .select('*')
     .eq('name', 'upi')
     .single();
 
   if (!existing) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('payment_methods')
       .insert({
         name: 'upi',
@@ -194,7 +194,7 @@ async function ensureUPIPaymentMethod() {
 }
 
 module.exports = {
-  supabase,
+  db,
   createTestUser,
   createTestFloor,
   createTestTable,
