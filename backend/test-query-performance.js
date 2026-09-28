@@ -7,7 +7,7 @@
  * Usage: node test-query-performance.js
  */
 
-const { supabase } = require('./src/config/supabase');
+const { db } = require('./src/config/db');
 const CacheService = require('./src/services/CacheService');
 const queryOptimizer = require('./src/utils/queryOptimizer');
 
@@ -28,7 +28,7 @@ async function testTableSelection() {
     console.log('\n📊 Testing Table Selection Queries...');
     
     // Get a floor ID
-    const { data: floors } = await supabase.from('floors').select('id').limit(1);
+    const { data: floors } = await db.from('floors').select('id').limit(1);
     if (!floors || floors.length === 0) {
         console.log('  ⚠️  No floors found, skipping test');
         return;
@@ -37,7 +37,7 @@ async function testTableSelection() {
 
     // Test 1: Table selection by floor and status
     const timer1 = measureTime('Table selection (floor + status)');
-    const { data: tables } = await supabase
+    const { data: tables } = await db
         .from('tables')
         .select('*')
         .eq('floor_id', floorId)
@@ -95,14 +95,14 @@ async function testPaymentQueries() {
     console.log(`  ✓ Found ${requests.length} pending requests`);
 
     // Test 2: Payment by order
-    const { data: orders } = await supabase
+    const { data: orders } = await db
         .from('orders')
         .select('id')
         .limit(1);
     
     if (orders && orders.length > 0) {
         const timer2 = measureTime('Payment by order ID');
-        const { data: payment } = await supabase
+        const { data: payment } = await db
             .from('payments')
             .select('*')
             .eq('order_id', orders[0].id);
@@ -175,19 +175,19 @@ async function testIndexUsage() {
     console.log('\n📊 Testing Index Usage...');
 
     // Query to check if indexes are being used
-    const { data: indexStats } = await supabase.rpc('pg_stat_user_indexes', {
+    const { data: indexStats } = await db.rpc('pg_stat_user_indexes', {
         schemaname: 'public'
     }).catch(() => ({ data: null }));
 
     if (indexStats) {
         console.log('  ✓ Index statistics available');
-        // Note: This requires a custom RPC function in Supabase
+        // Note: This requires a custom RPC function in MongoDB
     } else {
         console.log('  ⚠️  Index statistics not available (requires custom RPC)');
     }
 
     // Check if performance indexes exist
-    const { data: indexes } = await supabase
+    const { data: indexes } = await db
         .rpc('pg_indexes')
         .catch(() => ({ data: null }));
 
