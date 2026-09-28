@@ -4,7 +4,7 @@
  * Database operations for users table.
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 const User = {
@@ -12,7 +12,7 @@ const User = {
      * Find all users with optional filters
      */
     async findAll(filters = {}) {
-        let query = supabase
+        let query = db
             .from('users')
             .select('id, email, full_name, phone, role, is_active, created_at, updated_at')
             .order('created_at', { ascending: false });
@@ -35,7 +35,7 @@ const User = {
      * Find user by ID
      */
     async findById(id) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('users')
             .select('id, email, full_name, phone, role, is_active, created_at, updated_at')
             .eq('id', id)
@@ -49,7 +49,7 @@ const User = {
      * Find user by email
      */
     async findByEmail(email) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('users')
             .select('*')
             .eq('email', email)
@@ -63,7 +63,7 @@ const User = {
      * Create a new user
      */
     async create(userData) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('users')
             .insert(userData)
             .select('id, email, full_name, phone, role, is_active, created_at')
@@ -77,7 +77,7 @@ const User = {
      * Update a user
      */
     async update(id, updates) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('users')
             .update({ ...updates, updated_at: new Date().toISOString() })
             .eq('id', id)
