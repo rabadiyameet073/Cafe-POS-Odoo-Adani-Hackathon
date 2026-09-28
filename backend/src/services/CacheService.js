@@ -7,7 +7,7 @@
  * Performance NFR 1, 2, 3: Reduces query load for frequently accessed static data
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 class CacheService {
@@ -129,7 +129,7 @@ class CacheService {
      */
     async getFloors() {
         return this.get('floors:all', async () => {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('floors')
                 .select('*')
                 .eq('is_active', true)
@@ -150,7 +150,7 @@ class CacheService {
      */
     async getCategories() {
         return this.get('categories:all', async () => {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('product_categories')
                 .select('*')
                 .eq('is_active', true)
@@ -172,7 +172,7 @@ class CacheService {
      */
     async getProductsByCategory(categoryId) {
         return this.get(`products:category:${categoryId}`, async () => {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('products')
                 .select(`
                     *,
@@ -197,7 +197,7 @@ class CacheService {
      */
     async getAllProducts() {
         return this.get('products:all', async () => {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('products')
                 .select(`
                     *,
@@ -222,7 +222,7 @@ class CacheService {
      */
     async getPaymentMethods() {
         return this.get('payment_methods:all', async () => {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('payment_methods')
                 .select('*')
                 .eq('is_enabled', true);
@@ -243,7 +243,7 @@ class CacheService {
      */
     async getTablesByFloor(floorId) {
         return this.get(`tables:floor:${floorId}`, async () => {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('tables')
                 .select('*')
                 .eq('floor_id', floorId)
