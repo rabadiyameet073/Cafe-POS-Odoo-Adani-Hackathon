@@ -4,7 +4,7 @@
  * Database operations for order_items table.
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 const OrderItem = {
@@ -12,7 +12,7 @@ const OrderItem = {
      * Find all items for an order
      */
     async findByOrderId(orderId) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('order_items')
             .select(`
                 *,
@@ -30,7 +30,7 @@ const OrderItem = {
      * Find item by ID
      */
     async findById(id) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('order_items')
             .select(`
                 *,
@@ -56,7 +56,7 @@ const OrderItem = {
             itemData.line_total = (unitPrice + variantPrice) * quantity;
         }
 
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('order_items')
             .insert(itemData)
             .select(`
@@ -83,7 +83,7 @@ const OrderItem = {
             updates.line_total = (unitPrice + variantPrice) * quantity;
         }
 
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('order_items')
             .update({ ...updates, updated_at: new Date().toISOString() })
             .eq('id', id)
@@ -105,7 +105,7 @@ const OrderItem = {
      * Delete an order item
      */
     async delete(id) {
-        const { error } = await supabase
+        const { error } = await db
             .from('order_items')
             .delete()
             .eq('id', id);
@@ -118,7 +118,7 @@ const OrderItem = {
      * Get items pending in kitchen
      */
     async getPendingKitchenItems(orderId) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('order_items')
             .select(`
                 *,
