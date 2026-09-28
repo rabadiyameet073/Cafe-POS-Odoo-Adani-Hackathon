@@ -6,7 +6,7 @@
  * Requirements: Reliability NFR 1
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 const MonitoringService = require('./MonitoringService');
 
@@ -139,7 +139,7 @@ class AlertingService {
      */
     async checkDatabaseConnection() {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('tables')
                 .select('id', { count: 'exact', head: true })
                 .limit(1);
@@ -226,7 +226,7 @@ class AlertingService {
             });
 
             // Create notification in database
-            await supabase.from('notifications').insert({
+            await db.from('notifications').insert({
                 type: 'system_alert',
                 recipient_role: 'admin',
                 title: `[${alert.severity.toUpperCase()}] ${alert.title}`,
@@ -260,7 +260,7 @@ class AlertingService {
      */
     async getAlertHistory(limit = 50) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('notifications')
                 .select('*')
                 .eq('type', 'system_alert')
