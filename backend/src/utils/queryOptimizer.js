@@ -2,12 +2,12 @@
  * Query Optimizer Utilities
  * 
  * Provides optimized query patterns and helpers for common database operations.
- * Implements best practices for Supabase/PostgreSQL query optimization.
+ * Implements best practices for MongoDB/PostgreSQL query optimization.
  * 
  * Performance NFR 1, 2, 3
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('./logger');
 
 /**
@@ -22,7 +22,7 @@ async function batchFetchByIds(table, ids, columns = '*') {
         return [];
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from(table)
         .select(columns)
         .in('id', ids);
@@ -41,7 +41,7 @@ async function batchFetchByIds(table, ids, columns = '*') {
  * @returns {Promise<Array>} Active sessions
  */
 async function getActiveTableSessions(filters = {}) {
-    let query = supabase
+    let query = db
         .from('table_sessions')
         .select(`
             id,
@@ -87,7 +87,7 @@ async function getActiveTableSessions(filters = {}) {
  * @returns {Promise<Array>} Orders with items
  */
 async function getOrdersWithItems(filters = {}, limit = 50) {
-    let query = supabase
+    let query = db
         .from('orders')
         .select(`
             *,
@@ -134,7 +134,7 @@ async function getOrdersWithItems(filters = {}, limit = 50) {
  * @returns {Promise<Array>} Kitchen orders
  */
 async function getActiveKitchenOrders(statuses = ['received', 'preparing', 'ready'], limit = 100) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('kitchen_orders')
         .select('*')
         .in('status', statuses)
@@ -155,7 +155,7 @@ async function getActiveKitchenOrders(statuses = ['received', 'preparing', 'read
  * @returns {Promise<Array>} Payment requests
  */
 async function getPendingPaymentRequests(limit = 50) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('cashier_payment_requests')
         .select('*')
         .eq('status', 'pending')
@@ -179,7 +179,7 @@ async function getExpiringTimers(warningMinutes = 5) {
     const now = new Date();
     const warningTime = new Date(now.getTime() + warningMinutes * 60 * 1000);
 
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('table_sessions')
         .select(`
             id,
@@ -210,7 +210,7 @@ async function getExpiringTimers(warningMinutes = 5) {
 async function getExpiredTimers() {
     const now = new Date().toISOString();
 
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('table_sessions')
         .select('id, table_id, table_token, table_number, timer_ends_at')
         .eq('status', 'active')
@@ -238,12 +238,12 @@ async function bulkUpdate(table, updates) {
 
     let successCount = 0;
 
-    // PostgreSQL doesn't support bulk updates directly via Supabase
+    // PostgreSQL doesn't support bulk updates directly via MongoDB
     // So we batch them in a transaction-like manner
     for (const update of updates) {
         const { id, ...fields } = update;
         
-        const { error } = await supabase
+        const { error } = await db
             .from(table)
             .update(fields)
             .eq('id', id);
@@ -265,7 +265,7 @@ async function bulkUpdate(table, updates) {
  * @returns {Promise<number>} Count
  */
 async function countRecords(table, filters = {}) {
-    let query = supabase
+    let query = db
         .from(table)
         .select('*', { count: 'exact', head: true });
 
@@ -293,7 +293,7 @@ async function countRecords(table, filters = {}) {
  * @returns {Promise<Array>} Floor availability stats
  */
 async function getTableAvailabilitySummary() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('tables')
         .select(`
             floor_id,
@@ -341,7 +341,7 @@ async function getTableAvailabilitySummary() {
  * @returns {object} Optimized query builder
  */
 function buildOptimizedSubscription(table, filters = {}) {
-    let query = supabase
+    let query = db
         .from(table)
         .select('*');
 
