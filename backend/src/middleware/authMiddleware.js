@@ -1,10 +1,10 @@
 const { verifyToken } = require('../services/tokenService');
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const { AuthenticationError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 const { findUserById } = require('../config/mockUsers');
 
-// Flag to use mock users when Supabase is unavailable
+// Flag to use mock users when MongoDB is unavailable
 const USE_MOCK_USERS = process.env.USE_MOCK_USERS === 'true';
 
 // Session timeout configuration (30 minutes for admin users)
@@ -33,16 +33,16 @@ async function verifyTokenMiddleware(req, res, next) {
 
         let user;
         
-        // Try mock users first if enabled or if Supabase fails
+        // Try mock users first if enabled or if MongoDB fails
         if (USE_MOCK_USERS) {
             user = findUserById(decoded.user_id);
             if (!user) {
                 throw new AuthenticationError('User not found');
             }
         } else {
-            // Try Supabase
+            // Try MongoDB
             try {
-                const { data, error } = await supabase
+                const { data, error } = await db
                     .from('users')
                     .select('id, email, full_name, phone, role, is_active')
                     .eq('id', decoded.user_id)
@@ -50,7 +50,7 @@ async function verifyTokenMiddleware(req, res, next) {
 
                 if (error || !data) {
                     // Fallback to mock users
-                    logger.warn('Supabase query failed, using mock users');
+                    logger.warn('MongoDB query failed, using mock users');
                     user = findUserById(decoded.user_id);
                     if (!user) {
                         throw new AuthenticationError('User not found');
@@ -60,7 +60,7 @@ async function verifyTokenMiddleware(req, res, next) {
                 }
             } catch (err) {
                 // Fallback to mock users on any error
-                logger.warn('Supabase error, using mock users:', err.message);
+                logger.warn('MongoDB error, using mock users:', err.message);
                 user = findUserById(decoded.user_id);
                 if (!user) {
                     throw new AuthenticationError('User not found');
@@ -124,7 +124,7 @@ async function optionalAuth(req, res, next) {
         const decoded = verifyToken(token);
 
         if (decoded) {
-            const { data: user } = await supabase
+            const { data: user } = await db
                 .from('users')
                 .select('id, email, full_name, phone, role, is_active')
                 .eq('id', decoded.user_id)
