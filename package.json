@@ -10,6 +10,7 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build:frontend": "npm run build --prefix frontend",
     "start:backend": "npm start --prefix backend",
+    "seed:mongodb": "node backend/seed-mongodb.js",
     "vercel-build": "cd frontend && npm install && npm run build"
   },
   "dependencies": {

@@ -14,32 +14,59 @@ const bcrypt = require('bcryptjs');
 function buildStore() {
     const now = new Date().toISOString();
 
-    // Users
+    // Users (both demo and production credentials supported)
     const users = [
         { id: '1', email: 'admin@demo.com', password_hash: bcrypt.hashSync('demo123', 10), full_name: 'Admin User', phone: '+91-9876543210', role: 'admin', is_active: true, created_at: now, updated_at: now },
         { id: '2', email: 'cashier@demo.com', password_hash: bcrypt.hashSync('demo123', 10), full_name: 'Riya Cashier', phone: '+91-9876543211', role: 'cashier', is_active: true, created_at: now, updated_at: now },
         { id: '3', email: 'kitchen@demo.com', password_hash: bcrypt.hashSync('demo123', 10), full_name: 'Chef Arun', phone: '+91-9876543212', role: 'kitchen', is_active: true, created_at: now, updated_at: now },
         { id: '4', email: 'customer@demo.com', password_hash: bcrypt.hashSync('demo123', 10), full_name: 'Customer User', phone: '+91-9876543213', role: 'customer', is_active: true, created_at: now, updated_at: now },
+        { id: '5', email: 'admin@cafe.com', password_hash: bcrypt.hashSync('admin123', 10), full_name: 'Administrator', phone: '+91-9876543210', role: 'admin', is_active: true, created_at: now, updated_at: now },
+        { id: '6', email: 'cashier@cafe.com', password_hash: bcrypt.hashSync('cashier123', 10), full_name: 'Cashier Staff', phone: '+91-9876543211', role: 'cashier', is_active: true, created_at: now, updated_at: now },
+        { id: '7', email: 'kitchen@cafe.com', password_hash: bcrypt.hashSync('kitchen123', 10), full_name: 'Head Chef', phone: '+91-9876543212', role: 'kitchen', is_active: true, created_at: now, updated_at: now },
+        { id: '8', email: 'customer@cafe.com', password_hash: bcrypt.hashSync('customer123', 10), full_name: 'Meet Rabadiya', role: 'customer', phone: '+91-9876543213', role: 'customer', is_active: true, created_at: now, updated_at: now },
     ];
 
     // Floors
     const floors = [
-        { id: 'f1', name: 'Ground Floor', description: 'Main dining area', display_order: 1, is_active: true, created_at: now, updated_at: now },
-        { id: 'f2', name: 'First Floor', description: 'Premium seating area', display_order: 2, is_active: true, created_at: now, updated_at: now },
-        { id: 'f3', name: 'Terrace', description: 'Open-air terrace seating', display_order: 3, is_active: true, created_at: now, updated_at: now },
+        { id: 'f1', name: 'Ground Floor', description: 'Main dining area with maximum seating and cashier counter', display_order: 1, is_active: true, created_at: now, updated_at: now },
+        { id: 'f2', name: 'First Floor', description: 'Quiet seating area suitable for families and groups', display_order: 2, is_active: true, created_at: now, updated_at: now },
+        { id: 'f3', name: 'Terrace', description: 'Open-air rooftop seating with city view', display_order: 3, is_active: true, created_at: now, updated_at: now },
     ];
 
-    // Tables
+    // Tables (All 27 tables from database/mock_data.sql)
     const tables = [
-        { id: 't1', floor_id: 'f1', table_number: 'T1', seats: 4, status: 'available', is_active: true, qr_code_token: null, current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
-        { id: 't2', floor_id: 'f1', table_number: 'T2', seats: 2, status: 'available', is_active: true, qr_code_token: null, current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
-        { id: 't3', floor_id: 'f1', table_number: 'T3', seats: 6, status: 'available', is_active: true, qr_code_token: null, current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
-        { id: 't4', floor_id: 'f1', table_number: 'T4', seats: 4, status: 'available', is_active: true, qr_code_token: null, current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
-        { id: 't5', floor_id: 'f2', table_number: 'T5', seats: 4, status: 'available', is_active: true, qr_code_token: null, current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
-        { id: 't6', floor_id: 'f2', table_number: 'T6', seats: 6, status: 'available', is_active: true, qr_code_token: null, current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
-        { id: 't7', floor_id: 'f2', table_number: 'T7', seats: 8, status: 'available', is_active: true, qr_code_token: null, current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
-        { id: 't8', floor_id: 'f3', table_number: 'TRC1', seats: 4, status: 'available', is_active: true, qr_code_token: null, current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
-        { id: 't9', floor_id: 'f3', table_number: 'TRC2', seats: 4, status: 'available', is_active: true, qr_code_token: null, current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        // Ground Floor (G-1 to G-9)
+        { id: 't1', floor_id: 'f1', table_number: 'G-1', seats: 4, status: 'available', is_active: true, qr_code_token: 'GF-T1', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't2', floor_id: 'f1', table_number: 'G-2', seats: 4, status: 'available', is_active: true, qr_code_token: 'GF-T2', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't3', floor_id: 'f1', table_number: 'G-3', seats: 2, status: 'available', is_active: true, qr_code_token: 'GF-T3', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't4', floor_id: 'f1', table_number: 'G-4', seats: 6, status: 'available', is_active: true, qr_code_token: 'GF-T4', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't5', floor_id: 'f1', table_number: 'G-5', seats: 4, status: 'available', is_active: true, qr_code_token: 'GF-T5', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't6', floor_id: 'f1', table_number: 'G-6', seats: 2, status: 'available', is_active: true, qr_code_token: 'GF-T6', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't7', floor_id: 'f1', table_number: 'G-7', seats: 8, status: 'available', is_active: true, qr_code_token: 'GF-T7', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't8', floor_id: 'f1', table_number: 'G-8', seats: 4, status: 'available', is_active: true, qr_code_token: 'GF-T8', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't9', floor_id: 'f1', table_number: 'G-9', seats: 2, status: 'available', is_active: true, qr_code_token: 'GF-T9', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+
+        // First Floor (F-1 to F-11)
+        { id: 't10', floor_id: 'f2', table_number: 'F-1', seats: 4, status: 'available', is_active: true, qr_code_token: 'FF-T1', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't11', floor_id: 'f2', table_number: 'F-2', seats: 4, status: 'available', is_active: true, qr_code_token: 'FF-T2', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't12', floor_id: 'f2', table_number: 'F-3', seats: 6, status: 'available', is_active: true, qr_code_token: 'FF-T3', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't13', floor_id: 'f2', table_number: 'F-4', seats: 2, status: 'available', is_active: true, qr_code_token: 'FF-T4', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't14', floor_id: 'f2', table_number: 'F-5', seats: 8, status: 'available', is_active: true, qr_code_token: 'FF-T5', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't15', floor_id: 'f2', table_number: 'F-6', seats: 4, status: 'available', is_active: true, qr_code_token: 'FF-T6', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't16', floor_id: 'f2', table_number: 'F-7', seats: 2, status: 'available', is_active: true, qr_code_token: 'FF-T7', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't17', floor_id: 'f2', table_number: 'F-8', seats: 6, status: 'available', is_active: true, qr_code_token: 'FF-T8', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't18', floor_id: 'f2', table_number: 'F-9', seats: 4, status: 'available', is_active: true, qr_code_token: 'FF-T9', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't19', floor_id: 'f2', table_number: 'F-10', seats: 2, status: 'available', is_active: true, qr_code_token: 'FF-T10', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't20', floor_id: 'f2', table_number: 'F-11', seats: 4, status: 'available', is_active: true, qr_code_token: 'FF-T11', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+
+        // Terrace (T-1 to T-7)
+        { id: 't21', floor_id: 'f3', table_number: 'T-1', seats: 4, status: 'available', is_active: true, qr_code_token: 'TR-T1', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't22', floor_id: 'f3', table_number: 'T-2', seats: 2, status: 'available', is_active: true, qr_code_token: 'TR-T2', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't23', floor_id: 'f3', table_number: 'T-3', seats: 6, status: 'available', is_active: true, qr_code_token: 'TR-T3', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't24', floor_id: 'f3', table_number: 'T-4', seats: 4, status: 'available', is_active: true, qr_code_token: 'TR-T4', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't25', floor_id: 'f3', table_number: 'T-5', seats: 8, status: 'available', is_active: true, qr_code_token: 'TR-T5', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't26', floor_id: 'f3', table_number: 'T-6', seats: 2, status: 'available', is_active: true, qr_code_token: 'TR-T6', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
+        { id: 't27', floor_id: 'f3', table_number: 'T-7', seats: 4, status: 'available', is_active: true, qr_code_token: 'TR-T7', current_session_id: null, occupied_since: null, occupied_until: null, created_at: now, updated_at: now },
     ];
 
     // Product Categories
