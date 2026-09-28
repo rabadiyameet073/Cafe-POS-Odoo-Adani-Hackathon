@@ -4,7 +4,7 @@
  * Provides:
  * - Direct REST communication with backend MongoDB Atlas endpoints (/rest/v1)
  * - Socket.IO real-time event distribution and subscription management
- * - Zero cloud Supabase dependencies
+ * - Zero cloud MongoDB dependencies
  * - Configured for hosted production environment (https://cafe-pos-odoo-adani-hackathon.vercel.app)
  */
 
@@ -176,9 +176,6 @@ export const db = {
   },
   removeChannel() {}
 };
-
-// Backwards compatibility alias
-export const supabase = db;
 
 // ─── Real-time Subscriptions via Socket.IO ───
 const activeSubscriptions = new Map();
