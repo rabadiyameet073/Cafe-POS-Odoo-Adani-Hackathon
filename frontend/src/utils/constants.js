@@ -1,15 +1,21 @@
 // Central API + socket configuration for all environments
-// Dynamically uses current host/domain, eliminating all hardcoded localhost references
-const isDev = import.meta.env.DEV
-const dynamicHost = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1'
+// Configured for hosted production at https://cafe-pos-odoo-adani-hackathon.vercel.app
 
-const DEFAULT_API_URL = '/api'
-const DEFAULT_SOCKET_URL = typeof window !== 'undefined'
-  ? (isDev && window.location.port === '5173' ? `${window.location.protocol}//${dynamicHost}:3000` : window.location.origin)
-  : ''
+export const HOSTED_ORIGIN = 'https://cafe-pos-odoo-adani-hackathon.vercel.app'
 
-export const API_URL = import.meta.env.VITE_API_URL || DEFAULT_API_URL
-export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || DEFAULT_SOCKET_URL
+// Dynamic origin detection with hosted production fallback (zero localhost dependencies)
+const getDynamicOrigin = () => {
+  if (typeof window !== 'undefined' && window.location && window.location.origin) {
+    const origin = window.location.origin
+    if (!origin.includes('localhost') && !origin.includes('127.0.0.1')) {
+      return origin
+    }
+  }
+  return HOSTED_ORIGIN
+}
+
+export const API_URL = import.meta.env.VITE_API_URL || '/api'
+export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || (typeof window !== 'undefined' && window.location ? window.location.origin : HOSTED_ORIGIN)
 
 export const USER_ROLES = {
   CUSTOMER: 'customer',

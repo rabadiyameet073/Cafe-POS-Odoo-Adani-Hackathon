@@ -7,49 +7,21 @@
  * Run with: node test-auth.js
  */
 
-const http = require('http');
-
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = process.env.API_URL || 'https://cafe-pos-odoo-adani-hackathon.vercel.app/api';
 
 // Helper function to make HTTP requests
-function makeRequest(method, path, data = null, token = null) {
-    return new Promise((resolve, reject) => {
-        const url = new URL(API_BASE + path);
-        const options = {
-            hostname: url.hostname,
-            port: url.port,
-            path: url.pathname + url.search,
-            method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        };
+async function makeRequest(method, path, data = null, token = null) {
+    const url = `${API_BASE}${path}`;
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        if (token) {
-            options.headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const req = http.request(options, (res) => {
-            let body = '';
-            res.on('data', (chunk) => body += chunk);
-            res.on('end', () => {
-                try {
-                    const response = JSON.parse(body);
-                    resolve({ status: res.statusCode, data: response });
-                } catch (e) {
-                    resolve({ status: res.statusCode, data: body });
-                }
-            });
-        });
-
-        req.on('error', reject);
-
-        if (data) {
-            req.write(JSON.stringify(data));
-        }
-
-        req.end();
+    const res = await fetch(url, {
+        method,
+        headers,
+        body: data ? JSON.stringify(data) : undefined
     });
+    const responseData = await res.json().catch(() => ({}));
+    return { status: res.status, data: responseData };
 }
 
 async function runTests() {
@@ -169,7 +141,7 @@ async function runTests() {
 
     } catch (error) {
         console.error('❌ Test error:', error.message);
-        console.error('\n⚠️  Make sure the server is running on http://localhost:3000');
+        console.error(`\n⚠️  Make sure the API is reachable at ${API_BASE}`);
     }
 }
 

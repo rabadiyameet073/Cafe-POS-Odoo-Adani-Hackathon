@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const targetUrl = process.env.VITE_BACKEND_URL || 'https://cafe-pos-odoo-adani-hackathon.vercel.app'
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -8,14 +10,14 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: targetUrl,
         changeOrigin: true,
-        secure: false
+        secure: true
       },
       '/rest': {
-        target: 'http://localhost:3000',
+        target: targetUrl,
         changeOrigin: true,
-        secure: false
+        secure: true
       }
     }
   }

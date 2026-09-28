@@ -31,7 +31,7 @@ const PORT = env.PORT || 3000;
 server.listen(PORT, () => {
     logger.info(`🚀 Server running on port ${PORT}`);
     logger.info(`📡 Environment: ${env.NODE_ENV}`);
-    logger.info(`🔗 API Base URL: http://localhost:${PORT}/api`);
+    logger.info(`🔗 Hosted API Base URL: ${env.CLIENT_URL}/api`);
     
     // Start background jobs after server is running
     BackgroundJobManager.start();

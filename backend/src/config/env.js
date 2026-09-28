@@ -12,18 +12,18 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const env = {
     // Server Configuration
-    NODE_ENV: process.env.NODE_ENV || 'development',
+    NODE_ENV: process.env.NODE_ENV || 'production',
     PORT: parseInt(process.env.PORT, 10) || 3000,
 
-    // MongoDB Configuration
-    MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/cafe_pos',
+    // MongoDB Configuration - Uses MongoDB Atlas connection string
+    MONGODB_URI: process.env.MONGODB_URI || '',
 
     // JWT Configuration
-    JWT_SECRET: process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? undefined : 'default_jwt_secret_change_in_production'),
+    JWT_SECRET: process.env.JWT_SECRET || 'cafe_pos_jwt_secret_production_key_2026',
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
 
-    // Client URL for CORS
-    CLIENT_URL: process.env.CLIENT_URL || '*',
+    // Client URL for CORS / Hosted URL
+    CLIENT_URL: process.env.CLIENT_URL || 'https://cafe-pos-odoo-adani-hackathon.vercel.app',
 
     // Optional Payment Configuration
     RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,

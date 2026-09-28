@@ -17,11 +17,11 @@ async function connectMongoDB() {
     if (mongoose.connection.readyState === 1) return mongoose.connection;
     if (mongoose.connection.readyState === 2 && connectionPromise) return connectionPromise;
 
-    const uri = env.MONGODB_URI || 'mongodb://localhost:27017/cafe_pos';
-    
-    // Mask credentials for logging
-    const maskedUri = uri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@');
-    logger.info(`Connecting to MongoDB at: ${maskedUri}`);
+    const uri = env.MONGODB_URI;
+    if (!uri) {
+        logger.warn('⚠️ MONGODB_URI is not set. Please configure MONGODB_URI in your environment variables.');
+        return null;
+    }
 
     connectionPromise = mongoose.connect(uri, {
         serverSelectionTimeoutMS: 5000,

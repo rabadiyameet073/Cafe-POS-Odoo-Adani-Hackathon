@@ -9,7 +9,7 @@
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-4-000000?style=for-the-badge&logo=express&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
 ![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?style=for-the-badge&logo=socketdotio&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)
 
@@ -176,9 +176,8 @@ graph LR
 <td align="center" width="96"><img src="https://skillicons.dev/icons?i=tailwind" width="48" height="48" alt="Tailwind" /><br><b>Tailwind</b></td>
 <td align="center" width="96"><img src="https://skillicons.dev/icons?i=nodejs" width="48" height="48" alt="Node.js" /><br><b>Node.js</b></td>
 <td align="center" width="96"><img src="https://skillicons.dev/icons?i=express" width="48" height="48" alt="Express" /><br><b>Express</b></td>
-<td align="center" width="96"><img src="https://skillicons.dev/icons?i=supabase" width="48" height="48" alt="Supabase" /><br><b>Supabase</b></td>
+<td align="center" width="96"><img src="https://skillicons.dev/icons?i=mongodb" width="48" height="48" alt="MongoDB" /><br><b>MongoDB</b></td>
 <td align="center" width="96"><img src="https://skillicons.dev/icons?i=vercel" width="48" height="48" alt="Vercel" /><br><b>Vercel</b></td>
-<td align="center" width="96"><img src="https://skillicons.dev/icons?i=postgres" width="48" height="48" alt="PostgreSQL" /><br><b>PostgreSQL</b></td>
 </tr>
 </table>
 
@@ -193,7 +192,6 @@ graph LR
 | `tailwindcss` | Utility-first CSS |
 | `framer-motion` | Animations & transitions |
 | `socket.io-client` | Real-time WebSocket client |
-| `@supabase/supabase-js` | Database & realtime subscriptions |
 | `qrcode.react` | UPI QR code generation |
 | `axios` | HTTP client |
 
@@ -252,20 +250,18 @@ cd ../frontend && npm install
 <summary><b>📄 Backend <code>.env</code></b> (create in <code>backend/</code> folder)</summary>
 
 ```env
-NODE_ENV=development
+NODE_ENV=production
 PORT=3000
 
-# Supabase — get from your project dashboard
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-role-key
+# MongoDB Atlas Connection URI
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/cafe_pos?retryWrites=true&w=majority
 
-# JWT
+# JWT Authentication
 JWT_SECRET=your-strong-random-secret-key
 JWT_EXPIRES_IN=7d
 
-# Client
-CLIENT_URL=http://localhost:5173
+# Hosted Client URL
+CLIENT_URL=https://cafe-pos-odoo-adani-hackathon.vercel.app
 
 # Payment (optional)
 UPI_ID=merchant@upi
@@ -275,40 +271,36 @@ MERCHANT_NAME=Cafe POS
 </details>
 
 <details>
-<summary><b>📄 Frontend <code>.env</code></b> (create in <code>frontend/</code> folder — optional)</summary>
+<summary><b>📄 Frontend <code>.env</code></b> (optional)</summary>
 
 ```env
-VITE_API_URL=http://localhost:3000/api
-VITE_SOCKET_URL=http://localhost:3000
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_API_URL=/api
+VITE_SOCKET_URL=https://cafe-pos-odoo-adani-hackathon.vercel.app
 ```
 
 </details>
 
-### 4️⃣ Setup Database
+### 4️⃣ Seed Database
 
 ```bash
 cd backend
-node setup-database.js
+node seed-mongodb.js
 ```
 
 ### 5️⃣ Run the App
 
 ```bash
-# Terminal 1 — Backend (port 3000)
-cd backend
-npm run dev
+# Production Hosted Site:
+🌐 https://cafe-pos-odoo-adani-hackathon.vercel.app
 
-# Terminal 2 — Frontend (port 5173)
-cd frontend
+# Or Run Locally:
 npm run dev
 ```
 
-### 6️⃣ Open in Browser
+### 6️⃣ Access the App
 
 ```
-🌐 http://localhost:5173
+🌐 https://cafe-pos-odoo-adani-hackathon.vercel.app
 ```
 
 ---
@@ -348,15 +340,13 @@ In **Vercel Dashboard → Settings → Environment Variables**:
 
 | Variable | Value | Required |
 |:---------|:------|:--------:|
-| `SUPABASE_URL` | `https://your-project.supabase.co` | ✅ |
-| `SUPABASE_ANON_KEY` | Your Supabase anon key | ✅ |
-| `SUPABASE_SERVICE_KEY` | Your Supabase service role key | ✅ |
+| `MONGODB_URI` | `mongodb+srv://<user>:<password>@cluster.mongodb.net/cafe_pos` | ✅ |
 | `JWT_SECRET` | A strong random string (32+ chars) | ✅ |
-| `VITE_SUPABASE_URL` | Same as `SUPABASE_URL` | ✅ |
-| `VITE_SUPABASE_ANON_KEY` | Same as `SUPABASE_ANON_KEY` | ✅ |
-| `VITE_API_URL` | `/api` or leave unset | ➖ |
+| `CLIENT_URL` | `https://cafe-pos-odoo-adani-hackathon.vercel.app` | ➖ |
+| `VITE_API_URL` | `/api` | ➖ |
+| `VITE_SOCKET_URL` | `https://cafe-pos-odoo-adani-hackathon.vercel.app` | ➖ |
 
-> ⚠️ **Serverless Notes:** Socket.IO is unavailable on Vercel — the app falls back to Supabase Realtime. Background jobs (timers, cache) don't run — use Vercel Cron Jobs if needed.
+> ℹ️ **Database & Cloud Execution:** Powered 100% by native MongoDB Atlas with serverless connection reuse and Mongoose schemas. Real-time updates seamlessly bridge through Socket.IO and REST emulation.
 
 ---
 
