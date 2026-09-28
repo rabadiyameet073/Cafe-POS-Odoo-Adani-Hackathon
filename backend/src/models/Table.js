@@ -4,7 +4,7 @@
  * Database operations for tables table.
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const { generateQRToken } = require('../utils/helpers');
 const logger = require('../utils/logger');
 
@@ -13,7 +13,7 @@ const Table = {
      * Find all tables with optional filters
      */
     async findAll(filters = {}) {
-        let query = supabase
+        let query = db
             .from('tables')
             .select('*, floors(id, name)')
             .order('table_number', { ascending: true });
@@ -40,7 +40,7 @@ const Table = {
      * Find tables by floor ID
      */
     async findByFloorId(floorId) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('tables')
             .select('*')
             .eq('floor_id', floorId)
@@ -55,7 +55,7 @@ const Table = {
      * Find available tables
      */
     async findAvailable() {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('tables')
             .select('*, floors(id, name)')
             .eq('status', 'available')
@@ -70,7 +70,7 @@ const Table = {
      * Find table by ID
      */
     async findById(id) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('tables')
             .select('*, floors(id, name)')
             .eq('id', id)
@@ -84,7 +84,7 @@ const Table = {
      * Find table by QR token
      */
     async findByQRToken(token) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('tables')
             .select('*, floors(id, name)')
             .eq('qr_code_token', token)
@@ -103,7 +103,7 @@ const Table = {
             tableData.qr_code_token = generateQRToken();
         }
 
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('tables')
             .insert(tableData)
             .select('*, floors(id, name)')
@@ -117,7 +117,7 @@ const Table = {
      * Update a table
      */
     async update(id, updates) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('tables')
             .update({ ...updates, updated_at: new Date().toISOString() })
             .eq('id', id)
@@ -146,7 +146,7 @@ const Table = {
      * Check if table has active orders
      */
     async hasActiveOrders(id) {
-        const { count, error } = await supabase
+        const { count, error } = await db
             .from('orders')
             .select('id', { count: 'exact', head: true })
             .eq('table_id', id)
