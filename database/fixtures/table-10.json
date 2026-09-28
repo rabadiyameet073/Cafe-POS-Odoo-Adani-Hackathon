@@ -1,0 +1,13 @@
+{
+  "tableNumber": "T10",
+  "capacity": 4,
+  "status": "available",
+  "qrCodeUrl": "https://cafe-pos-odoo-adani-hackathon.vercel.app/customer/floors?table=T10",
+  "metadata": {
+    "floorIndex": 2,
+    "position": {
+      "x": 0,
+      "y": 200
+    }
+  }
+}
