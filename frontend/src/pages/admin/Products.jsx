@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import AdminLayout from '../../components/layouts/AdminLayout'
 import { productService, categoryService } from '../../services/api.service'
 import { getProducts as getProductsDB, getCategories as getCategoriesDB } from '../../services/cafe.service'
-import { supabase } from '../../services/db.service'
+import { db } from '../../services/db.service'
 import Loading from '../../components/Loading'
 import { showToast } from '../../components/Toast'
 
@@ -25,10 +25,10 @@ const Products = () => {
   }, [])
 
   const fetchData = async () => {
-    // Fetch products - Supabase-direct first, backend API fallback
+    // Fetch products - MongoDB-direct first, backend API fallback
     try {
       // For admin, get ALL products (including unavailable)
-      const { data: prods, error: prodsErr } = await supabase
+      const { data: prods, error: prodsErr } = await db
         .from('products')
         .select('*, product_categories(name, icon_emoji)')
         .eq('is_active', true)
@@ -42,7 +42,7 @@ const Products = () => {
       } catch { /* silently fail */ }
     }
 
-    // Fetch categories - Supabase-direct first, backend API fallback
+    // Fetch categories - MongoDB-direct first, backend API fallback
     try {
       const cats = await getCategoriesDB()
       setCategories(cats || [])
@@ -63,7 +63,7 @@ const Products = () => {
         try {
           await productService.updateProduct(editingProduct.id, formData)
         } catch {
-          const { error } = await supabase.from('products').update({
+          const { error } = await db.from('products').update({
             name: formData.name,
             category_id: formData.category_id,
             price: Number(formData.price),
@@ -77,7 +77,7 @@ const Products = () => {
         try {
           await productService.createProduct(formData)
         } catch {
-          const { error } = await supabase.from('products').insert({
+          const { error } = await db.from('products').insert({
             name: formData.name,
             category_id: formData.category_id,
             price: Number(formData.price),
@@ -115,7 +115,7 @@ const Products = () => {
       try {
         await productService.deleteProduct(id)
       } catch {
-        const { error } = await supabase.from('products').update({ is_active: false }).eq('id', id)
+        const { error } = await db.from('products').update({ is_active: false }).eq('id', id)
         if (error) throw error
       }
       showToast('Product deleted successfully')
@@ -131,7 +131,7 @@ const Products = () => {
       try {
         await productService.toggleAvailability(id)
       } catch {
-        const { error } = await supabase.from('products').update({ is_available: !product?.is_available }).eq('id', id)
+        const { error } = await db.from('products').update({ is_available: !product?.is_available }).eq('id', id)
         if (error) throw error
       }
       showToast('Availability updated')
