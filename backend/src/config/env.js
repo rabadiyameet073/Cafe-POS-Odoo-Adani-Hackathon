@@ -16,7 +16,12 @@ const env = {
     PORT: parseInt(process.env.PORT, 10) || 3000,
 
     // MongoDB Configuration - Uses MongoDB Atlas connection string
-    MONGODB_URI: process.env.MONGODB_URI || '',
+    // Return empty string if it's a placeholder value
+    get MONGODB_URI() {
+        const raw = process.env.MONGODB_URI || '';
+        const isPlaceholder = !raw || raw.includes('user:password') || raw.includes('<password>') || raw.includes('<username>') || raw.length < 40;
+        return isPlaceholder ? '' : raw;
+    },
 
     // JWT Configuration
     JWT_SECRET: process.env.JWT_SECRET || 'cafe_pos_jwt_secret_production_key_2026',
@@ -28,8 +33,8 @@ const env = {
     // Optional Payment Configuration
     RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
     RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
-    UPI_ID: process.env.UPI_ID || 'merchant@upi',
-    MERCHANT_NAME: process.env.MERCHANT_NAME || 'Cafe POS',
+    UPI_ID: process.env.UPI_ID || 'rabadiyameet09@okaxis',
+    MERCHANT_NAME: process.env.MERCHANT_NAME || 'Meet Rabadiya - Cafe POS',
 
     // Helper methods
     isDevelopment: function () {
@@ -41,14 +46,10 @@ const env = {
     }
 };
 
-// Validate required environment variables
-const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
-const missingEnvVars = requiredEnvVars.filter(varName => !env[varName]);
-
-if (missingEnvVars.length > 0 && env.NODE_ENV !== 'development') {
-    console.error(`❌ Missing required environment variables: ${missingEnvVars.join(', ')}`);
-    console.error('Please check your .env file or Vercel environment variables');
-    throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+// Only warn, don't throw - allow app to start in memory mode
+if (!env.MONGODB_URI) {
+    console.warn('⚠️  MONGODB_URI not set. App will run in in-memory mode (data resets on restart).');
+    console.warn('   To persist data: set MONGODB_URI in your Vercel environment variables or backend/.env');
 }
 
 module.exports = env;

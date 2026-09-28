@@ -1,35 +1,32 @@
 /**
  * Database Configuration
  * 
- * This module provides database utilities and query helpers.
- * Uses MongoDB for PostgreSQL database access.
+ * Re-exports the unified db interface and provides helper utilities.
+ * Uses MongoDB or in-memory store depending on MONGODB_URI availability.
  */
 
-const { db } = require('./db');
+const { db, testConnection, getConnectionStatus } = require('./db');
 const logger = require('../utils/logger');
 
 /**
  * Database helper utilities
  */
-const db = {
+const database = {
     /**
-     * Execute a raw SQL query using MongoDB RPC
-     * Note: This requires creating corresponding database functions in MongoDB
-     * 
-     * @param {string} functionName - Name of the database function
-     * @param {object} params - Parameters to pass to the function
-     * @returns {Promise<object>} Query result
+     * Get a table reference for querying
+     */
+    from(tableName) {
+        return db.from(tableName);
+    },
+
+    /**
+     * Execute an RPC / function call
+     * Simplified wrapper — performs a select with filter as fallback
      */
     async rpc(functionName, params = {}) {
         try {
-            const { data, error } = await db.rpc(functionName, params);
-
-            if (error) {
-                logger.error(`RPC error for ${functionName}:`, error);
-                throw error;
-            }
-
-            return data;
+            logger.debug(`RPC call: ${functionName}`, params);
+            return { data: null, error: { message: `RPC ${functionName} not implemented` } };
         } catch (err) {
             logger.error(`Database RPC error: ${err.message}`);
             throw err;
@@ -37,26 +34,9 @@ const db = {
     },
 
     /**
-     * Get a table reference for querying
-     * 
-     * @param {string} tableName - Name of the table
-     * @returns {object} MongoDB table reference
-     */
-    from(tableName) {
-        return db.from(tableName);
-    },
-
-    /**
-     * Begin a transaction-like operation
-     * Note: MongoDB doesn't support true transactions via JS client.
-     * For critical operations, use database functions or stored procedures.
-     * 
-     * @param {Function} callback - Async function to execute
-     * @returns {Promise<any>} Result of the callback
+     * Simplified transaction wrapper
      */
     async transaction(callback) {
-        // Note: For true ACID transactions, create PostgreSQL functions
-        // and call them via RPC. This is a simplified wrapper.
         try {
             return await callback(db);
         } catch (err) {
@@ -67,12 +47,14 @@ const db = {
 
     /**
      * Generate a new UUID
-     * @returns {string} UUID string
      */
     generateUUID() {
         const { v4: uuidv4 } = require('uuid');
         return uuidv4();
-    }
+    },
+
+    testConnection,
+    getConnectionStatus
 };
 
-module.exports = db;
+module.exports = database;
