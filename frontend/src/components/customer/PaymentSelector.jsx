@@ -23,7 +23,7 @@ const PaymentSelector = () => {
 
   useEffect(() => {
     if (paymentId) {
-      // Set up Supabase subscription to payments table for status updates
+      // Set up MongoDB subscription to payments table for status updates
       const channel = subscribeToTable(
         'payments',
         `id=eq.${paymentId}`,
