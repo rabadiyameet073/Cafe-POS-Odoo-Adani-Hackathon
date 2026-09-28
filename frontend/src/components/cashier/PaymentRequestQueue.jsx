@@ -13,7 +13,7 @@ const PaymentRequestQueue = ({ onApprove, onReject }) => {
   useEffect(() => {
     fetchPendingRequests()
 
-    // Set up Supabase subscription to cashier_payment_requests table
+    // Set up MongoDB subscription to cashier_payment_requests table
     const channel = subscribeToTable(
       'cashier_payment_requests',
       'status=eq.pending',
