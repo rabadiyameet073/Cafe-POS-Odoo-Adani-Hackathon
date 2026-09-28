@@ -234,7 +234,7 @@ export function handleConnectionLoss(onReconnect) {
           isReconnecting = false
           reconnectAttempts = 0
           
-          // Reconnect all Supabase subscriptions
+          // Reconnect all MongoDB subscriptions
           reconnectAllSubscriptions()
           
           // Execute callback
