@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import AdminLayout from '../../components/layouts/AdminLayout'
 import { reportService } from '../../services/api.service'
-import { supabase } from '../../services/db.service'
+import { db } from '../../services/db.service'
 import Loading from '../../components/Loading'
 import { showToast } from '../../components/Toast'
 import Icon from '../../components/Icons'
@@ -30,7 +30,7 @@ const Reports = () => {
       }
       setReportData(res.data)
     } catch {
-      // Fallback: build basic report from Supabase-direct queries
+      // Fallback: build basic report from MongoDB-direct queries
       try {
         const fallback = await buildFallbackReport(activeTab, dateRange)
         setReportData(fallback)
@@ -48,7 +48,7 @@ const Reports = () => {
     const to = range.end_date + 'T23:59:59'
 
     if (type === 'sales' || type === 'payments') {
-      const { data: payments } = await supabase
+      const { data: payments } = await db
         .from('payments')
         .select('*, orders(table_number, total_amount)')
         .gte('created_at', from)
@@ -77,7 +77,7 @@ const Reports = () => {
     }
 
     if (type === 'products') {
-      const { data: products } = await supabase
+      const { data: products } = await db
         .from('products')
         .select('*, product_categories(name)')
         .eq('is_active', true)
