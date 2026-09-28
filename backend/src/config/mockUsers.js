@@ -1,6 +1,6 @@
 /**
  * Mock Users for Development
- * Use when Supabase is not available
+ * Use when MongoDB is not available
  */
 
 const bcrypt = require('bcryptjs');
