@@ -10,7 +10,7 @@
  * Requirements: 19.1, 19.2, 19.3, 19.4, 19.5
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const TableTokenService = require('../services/TableTokenService');
 const logger = require('../utils/logger');
 const { InvalidTokenError, InvalidStateError, NotFoundError } = require('../utils/errorHandler');
@@ -61,7 +61,7 @@ async function validateTableOccupied(req, res, next) {
             throw new InvalidStateError('Table ID is required');
         }
 
-        const { data: table, error } = await supabase
+        const { data: table, error } = await db
             .from('tables')
             .select('status, table_number')
             .eq('id', tableId)
@@ -118,7 +118,7 @@ async function validatePaymentConfirmed(req, res, next) {
             throw new InvalidStateError('Order ID is required');
         }
 
-        const { data: order, error } = await supabase
+        const { data: order, error } = await db
             .from('orders')
             .select('payment_status, order_number, status')
             .eq('id', orderId)
@@ -167,7 +167,7 @@ async function validatePaymentConfirmed(req, res, next) {
  * Wrapper for database transactions to ensure atomic multi-step operations
  * Requirement 19.5
  * 
- * Note: Supabase doesn't support transactions in the same way as traditional SQL.
+ * Note: MongoDB doesn't support transactions in the same way as traditional SQL.
  * This function provides a pattern for handling multi-step operations with rollback capability.
  */
 async function withTransaction(operations) {
@@ -220,7 +220,7 @@ async function validateOrderFlowSequence(req, res, next) {
         }
 
         // Get current session state
-        const { data: session, error } = await supabase
+        const { data: session, error } = await db
             .from('table_sessions')
             .select('status, timer_status')
             .eq('table_token', tableToken)
