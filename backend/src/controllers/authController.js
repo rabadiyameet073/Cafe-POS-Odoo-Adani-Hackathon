@@ -1,12 +1,12 @@
 const bcrypt = require('bcryptjs');
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const { generateToken } = require('../services/tokenService');
 const { formatResponse } = require('../utils/helpers');
 const { catchAsync, ValidationError, ConflictError, AuthenticationError, NotFoundError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 const { findUserByEmail, findUserById } = require('../config/mockUsers');
 
-// Flag to use mock users when Supabase is unavailable
+// Flag to use mock users when MongoDB is unavailable
 const USE_MOCK_USERS = process.env.USE_MOCK_USERS === 'true';
 
 const signup = catchAsync(async (req, res) => {
@@ -39,8 +39,8 @@ const signup = catchAsync(async (req, res) => {
         mockUsers.push(newUser);
         logger.info(`Mock user registered: ${email} (${role})`);
     } else {
-        // Supabase mode
-        const { data: existingUser } = await supabase
+        // MongoDB mode
+        const { data: existingUser } = await db
             .from('users')
             .select('id')
             .eq('email', email)
@@ -50,7 +50,7 @@ const signup = catchAsync(async (req, res) => {
             throw new ConflictError('A user with this email already exists');
         }
 
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('users')
             .insert({
                 email,
@@ -95,16 +95,16 @@ const login = catchAsync(async (req, res) => {
 
     let user;
 
-    // Try mock users first if enabled or if Supabase fails
+    // Try mock users first if enabled or if MongoDB fails
     if (USE_MOCK_USERS) {
         user = findUserByEmail(email);
         if (!user) {
             throw new AuthenticationError('Invalid email or password');
         }
     } else {
-        // Try Supabase
+        // Try MongoDB
         try {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('users')
                 .select('id, email, password_hash, full_name, phone, role, is_active')
                 .eq('email', email)
@@ -112,7 +112,7 @@ const login = catchAsync(async (req, res) => {
 
             if (error || !data) {
                 // Fallback to mock users
-                logger.warn('Supabase query failed, using mock users');
+                logger.warn('MongoDB query failed, using mock users');
                 user = findUserByEmail(email);
                 if (!user) {
                     throw new AuthenticationError('Invalid email or password');
@@ -122,7 +122,7 @@ const login = catchAsync(async (req, res) => {
             }
         } catch (err) {
             // Fallback to mock users on any error
-            logger.warn('Supabase error, using mock users:', err.message);
+            logger.warn('MongoDB error, using mock users:', err.message);
             user = findUserByEmail(email);
             if (!user) {
                 throw new AuthenticationError('Invalid email or password');
@@ -176,7 +176,7 @@ const getCurrentUser = catchAsync(async (req, res) => {
             throw new NotFoundError('User');
         }
     } else {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('users')
             .select('id, email, full_name, phone, role, is_active, created_at, updated_at')
             .eq('id', req.user.id)
