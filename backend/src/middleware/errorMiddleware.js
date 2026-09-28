@@ -70,7 +70,7 @@ function errorHandler(err, req, res, next) {
     });
 }
 
-function handleSupabaseError(error) {
+function handleMongoDBError(error) {
     const errorMap = {
         'PGRST116': { status: 404, message: 'Resource not found' },
         '23505': { status: 409, message: 'Resource already exists' },
@@ -106,8 +106,8 @@ async function notifyAdministrator(errorDetails) {
         // - Send email/SMS to on-call admin
         
         // For now, create a notification record in the database
-        const { supabase } = require('../config/db');
-        await supabase.from('notifications').insert({
+        const { db } = require('../config/db');
+        await db.from('notifications').insert({
             type: 'system_error',
             recipient_role: 'admin',
             title: 'System Error Detected',
@@ -123,6 +123,6 @@ async function notifyAdministrator(errorDetails) {
 module.exports = {
     notFoundHandler,
     errorHandler,
-    handleSupabaseError,
+    handleMongoDBError,
     notifyAdministrator
 };
