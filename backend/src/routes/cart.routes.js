@@ -2,18 +2,18 @@ const express = require('express');
 const router = express.Router();
 
 const cartController = require('../controllers/cartController');
-const { verifyToken } = require('../middleware/authMiddleware');
+const { optionalAuth } = require('../middleware/authMiddleware');
 
 // Add item to cart
-router.post('/add', verifyToken, cartController.addToCart);
+router.post('/add', optionalAuth, cartController.addToCart);
 
 // Get cart by table token
-router.get('/:tableToken', verifyToken, cartController.getCart);
+router.get('/:tableToken', optionalAuth, cartController.getCart);
 
 // Remove specific item from cart
-router.delete('/:tableToken/item/:itemId', verifyToken, cartController.removeCartItem);
+router.delete('/:tableToken/item/:itemId', optionalAuth, cartController.removeCartItem);
 
 // Clear entire cart
-router.delete('/:tableToken', verifyToken, cartController.clearCart);
+router.delete('/:tableToken', optionalAuth, cartController.clearCart);
 
 module.exports = router;

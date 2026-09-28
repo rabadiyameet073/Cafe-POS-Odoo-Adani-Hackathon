@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const productController = require('../controllers/productController');
-const { verifyToken } = require('../middleware/authMiddleware');
+const { verifyToken, optionalAuth } = require('../middleware/authMiddleware');
 const { requireRoles } = require('../middleware/roleCheckMiddleware');
 const { validate, validateUUIDParam } = require('../middleware/validationMiddleware');
 const {
@@ -13,11 +13,11 @@ const {
 } = require('../validators/productValidator');
 
 
-router.get('/', verifyToken, productController.getAllProducts);
+router.get('/', optionalAuth, productController.getAllProducts);
 
-router.get('/category/:categoryId', verifyToken, validateUUIDParam('categoryId'), productController.getProductsByCategory);
+router.get('/category/:categoryId', optionalAuth, validateUUIDParam('categoryId'), productController.getProductsByCategory);
 
-router.get('/:id', verifyToken, validateUUIDParam('id'), productController.getProductById);
+router.get('/:id', optionalAuth, validateUUIDParam('id'), productController.getProductById);
 
 router.post('/', verifyToken, requireRoles('admin'), createProductValidation, validate, productController.createProduct);
 
@@ -28,7 +28,7 @@ router.patch('/:id/availability', verifyToken, validateUUIDParam('id'), requireR
 
 router.delete('/:id', verifyToken, validateUUIDParam('id'), requireRoles('admin'), productController.deleteProduct);
 
-router.get('/:id/variants', verifyToken, validateUUIDParam('id'), productController.getProductVariants);
+router.get('/:id/variants', optionalAuth, validateUUIDParam('id'), productController.getProductVariants);
 
 router.post('/:id/variants', verifyToken, validateUUIDParam('id'), requireRoles('admin'), createVariantValidation, validate, productController.createVariant);
 

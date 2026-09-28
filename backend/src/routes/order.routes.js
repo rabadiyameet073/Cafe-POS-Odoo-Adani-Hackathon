@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const orderController = require('../controllers/orderController');
-const { verifyToken } = require('../middleware/authMiddleware');
+const { verifyToken, optionalAuth } = require('../middleware/authMiddleware');
 const { requireRoles } = require('../middleware/roleCheckMiddleware');
 const { validate, validateUUIDParam } = require('../middleware/validationMiddleware');
 const { validateTableToken, validateTableOccupied } = require('../middleware/dataIntegrityMiddleware');
@@ -15,16 +15,16 @@ router.get('/customer/:customerId', verifyToken, validateUUIDParam('customerId')
 
 router.get('/session/:sessionId', verifyToken, validateUUIDParam('sessionId'), requireRoles('admin', 'cashier'), orderController.getSessionOrders);
 
-router.get('/by-token/:tableToken', verifyToken, orderController.getOrdersByToken);
+router.get('/by-token/:tableToken', optionalAuth, orderController.getOrdersByToken);
 
 router.get('/:id', verifyToken, validateUUIDParam('id'), orderController.getOrderById);
 
 router.get('/:orderId/details', verifyToken, validateUUIDParam('orderId'), orderController.getOrderDetails);
 
-router.post('/', verifyToken, createOrderValidation, validate, orderController.createOrder);
+router.post('/', optionalAuth, createOrderValidation, validate, orderController.createOrder);
 
 // Create order from cart - validate table token and table is occupied (Requirements 19.1, 19.3)
-router.post('/create', verifyToken, validateTableToken, validateTableOccupied, orderController.createOrderFromCart);
+router.post('/create', optionalAuth, validateTableToken, validateTableOccupied, orderController.createOrderFromCart);
 
 router.put('/:id', verifyToken, validateUUIDParam('id'), orderController.updateOrder);
 

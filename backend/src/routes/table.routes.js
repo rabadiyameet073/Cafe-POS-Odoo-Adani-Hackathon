@@ -2,21 +2,21 @@ const express = require('express');
 const router = express.Router();
 
 const tableController = require('../controllers/tableController');
-const { verifyToken, requireAdmin, requireCashier } = require('../middleware/authMiddleware');
+const { verifyToken, optionalAuth, requireAdmin, requireCashier } = require('../middleware/authMiddleware');
 const { auditAdminAction } = require('../middleware/auditMiddleware');
 const { validateUUIDParam } = require('../middleware/validationMiddleware');
 
-router.get('/', verifyToken, tableController.getAllTables);
+router.get('/', optionalAuth, tableController.getAllTables);
 
-router.get('/available', verifyToken, tableController.getAvailableTables);
+router.get('/available', optionalAuth, tableController.getAvailableTables);
 
-router.get('/floor/:floorId', verifyToken, validateUUIDParam('floorId'), tableController.getTablesByFloor);
+router.get('/floor/:floorId', optionalAuth, validateUUIDParam('floorId'), tableController.getTablesByFloor);
 
-router.get('/:id', verifyToken, validateUUIDParam('id'), tableController.getTableById);
+router.get('/:id', optionalAuth, validateUUIDParam('id'), tableController.getTableById);
 
 router.post('/', verifyToken, requireAdmin, auditAdminAction('create_table'), tableController.createTable);
 
-router.post('/select', verifyToken, tableController.selectTable);
+router.post('/select', optionalAuth, tableController.selectTable);
 
 router.post('/release', verifyToken, requireCashier, auditAdminAction('release_table'), tableController.releaseTable);
 

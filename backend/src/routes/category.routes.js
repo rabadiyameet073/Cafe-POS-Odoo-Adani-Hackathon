@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 
 const categoryController = require('../controllers/categoryController');
-const { verifyToken } = require('../middleware/authMiddleware');
+const { verifyToken, optionalAuth } = require('../middleware/authMiddleware');
 const { requireRoles } = require('../middleware/roleCheckMiddleware');
 const { validateUUIDParam } = require('../middleware/validationMiddleware');
 
-router.get('/', verifyToken, categoryController.getAllCategories);
+router.get('/', optionalAuth, categoryController.getAllCategories);
 
-router.get('/:id', verifyToken, validateUUIDParam('id'), categoryController.getCategoryById);
+router.get('/:id', optionalAuth, validateUUIDParam('id'), categoryController.getCategoryById);
 
 router.post('/', verifyToken, requireRoles('admin'), categoryController.createCategory);
 
