@@ -4,7 +4,7 @@
  * Database operations for feedback table.
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 const Feedback = {
@@ -12,7 +12,7 @@ const Feedback = {
      * Find all feedback with optional filters
      */
     async findAll(filters = {}) {
-        let query = supabase
+        let query = db
             .from('feedback')
             .select('*, orders(id, order_number), users(id, full_name)')
             .order('created_at', { ascending: false });
@@ -39,7 +39,7 @@ const Feedback = {
      * Find feedback by ID
      */
     async findById(id) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('feedback')
             .select('*, orders(id, order_number), users(id, full_name)')
             .eq('id', id)
@@ -53,7 +53,7 @@ const Feedback = {
      * Find feedback for an order
      */
     async findByOrderId(orderId) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('feedback')
             .select('*')
             .eq('order_id', orderId)
@@ -67,7 +67,7 @@ const Feedback = {
      * Create feedback
      */
     async create(feedbackData) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('feedback')
             .insert(feedbackData)
             .select('*')
@@ -81,7 +81,7 @@ const Feedback = {
      * Get feedback statistics
      */
     async getStats() {
-        const { data: feedbacks, error } = await supabase
+        const { data: feedbacks, error } = await db
             .from('feedback')
             .select('*');
 
