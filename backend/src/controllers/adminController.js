@@ -1,4 +1,4 @@
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const { formatResponse } = require('../utils/helpers');
 const { catchAsync, ValidationError } = require('../utils/errorHandler');
 const { getAuditLogs } = require('../middleware/auditMiddleware');
@@ -10,7 +10,7 @@ const logger = require('../utils/logger');
  * Requirements: 17.1, 17.2, 17.3
  */
 const getOccupiedTables = catchAsync(async (req, res) => {
-    const { data: tables, error } = await supabase
+    const { data: tables, error } = await db
         .from('tables')
         .select(`
             id,
@@ -45,7 +45,7 @@ const getOccupiedTables = catchAsync(async (req, res) => {
         }
 
         // Get order status for this table
-        const { data: orders } = await supabase
+        const { data: orders } = await db
             .from('orders')
             .select('status, payment_status')
             .eq('table_id', table.id)
@@ -81,7 +81,7 @@ const getOccupiedTables = catchAsync(async (req, res) => {
  */
 const getDashboardStats = catchAsync(async (req, res) => {
     // Get table counts
-    const { data: allTables } = await supabase
+    const { data: allTables } = await db
         .from('tables')
         .select('status')
         .eq('is_active', true);
@@ -91,13 +91,13 @@ const getDashboardStats = catchAsync(async (req, res) => {
     const availableTables = allTables?.filter(t => t.status === 'available').length || 0;
 
     // Get pending payments count
-    const { count: pendingPayments } = await supabase
+    const { count: pendingPayments } = await db
         .from('cashier_payment_requests')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pending');
 
     // Get active orders count
-    const { count: activeOrders } = await supabase
+    const { count: activeOrders } = await db
         .from('orders')
         .select('*', { count: 'exact', head: true })
         .in('status', ['pending_payment', 'payment_requested', 'paid', 'received', 'preparing', 'ready']);
@@ -108,7 +108,7 @@ const getDashboardStats = catchAsync(async (req, res) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    const { data: todayPayments } = await supabase
+    const { data: todayPayments } = await db
         .from('payments')
         .select('amount')
         .in('status', ['approved', 'completed'])
@@ -135,7 +135,7 @@ const getDashboardStats = catchAsync(async (req, res) => {
 const monitorPayments = catchAsync(async (req, res) => {
     const { payment_method, status, from_date, to_date, limit = 100 } = req.query;
 
-    let query = supabase
+    let query = db
         .from('payments')
         .select(`
             id,
