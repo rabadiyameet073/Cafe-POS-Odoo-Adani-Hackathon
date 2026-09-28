@@ -4,7 +4,7 @@
  * Database operations for pos_sessions table.
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const { generateSessionNumber } = require('../utils/helpers');
 const logger = require('../utils/logger');
 
@@ -13,7 +13,7 @@ const Session = {
      * Find all sessions with optional filters
      */
     async findAll(filters = {}) {
-        let query = supabase
+        let query = db
             .from('pos_sessions')
             .select('*, users(id, full_name, email)')
             .order('opened_at', { ascending: false });
@@ -40,7 +40,7 @@ const Session = {
      * Find active session for a user
      */
     async findActiveForUser(userId) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('pos_sessions')
             .select('*')
             .eq('user_id', userId)
@@ -55,7 +55,7 @@ const Session = {
      * Find any open session
      */
     async findAnyActive() {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('pos_sessions')
             .select('*, users(id, full_name, email)')
             .eq('status', 'open')
@@ -70,7 +70,7 @@ const Session = {
      * Find session by ID
      */
     async findById(id) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('pos_sessions')
             .select('*, users(id, full_name, email)')
             .eq('id', id)
@@ -89,7 +89,7 @@ const Session = {
             sessionData.session_number = generateSessionNumber();
         }
 
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('pos_sessions')
             .insert({
                 ...sessionData,
@@ -107,7 +107,7 @@ const Session = {
      * Close a session
      */
     async close(id, closingData = {}) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('pos_sessions')
             .update({
                 status: 'closed',
@@ -128,7 +128,7 @@ const Session = {
      */
     async getStats(sessionId) {
         // Get orders count and totals
-        const { data: orders, error: ordersError } = await supabase
+        const { data: orders, error: ordersError } = await db
             .from('orders')
             .select('total_amount, status')
             .eq('session_id', sessionId);
@@ -136,7 +136,7 @@ const Session = {
         if (ordersError) throw ordersError;
 
         // Get payments
-        const { data: payments, error: paymentsError } = await supabase
+        const { data: payments, error: paymentsError } = await db
             .from('payments')
             .select('amount, status, payment_method_id, payment_methods(name, display_name)')
             .eq('session_id', sessionId);
