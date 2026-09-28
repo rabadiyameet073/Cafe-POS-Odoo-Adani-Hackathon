@@ -11,7 +11,7 @@
  */
 
 const request = require('supertest');
-const { db: supabase } = require('../../src/config/db');
+const { db } = require('../../src/config/db');
 
 const app = require('../../src/app');
 
@@ -24,7 +24,7 @@ describe('E2E: Kitchen Workflow', () => {
 
   beforeAll(async () => {
     // Create test cashier
-    const { data: cashier } = await supabase
+    const { data: cashier } = await db
       .from('users')
       .insert({
         email: `kitchen-cashier-${Date.now()}@test.com`,
@@ -38,7 +38,7 @@ describe('E2E: Kitchen Workflow', () => {
     cashierId = cashier.id;
 
     // Create test floor
-    const { data: floor } = await supabase
+    const { data: floor } = await db
       .from('floors')
       .insert({
         name: `Kitchen Floor ${Date.now()}`,
@@ -50,7 +50,7 @@ describe('E2E: Kitchen Workflow', () => {
     testFloorId = floor.id;
 
     // Create test product
-    const { data: category } = await supabase
+    const { data: category } = await db
       .from('product_categories')
       .insert({
         name: `Kitchen Category ${Date.now()}`,
@@ -59,7 +59,7 @@ describe('E2E: Kitchen Workflow', () => {
       .select()
       .single();
 
-    const { data: product } = await supabase
+    const { data: product } = await db
       .from('products')
       .insert({
         category_id: category.id,
@@ -77,19 +77,19 @@ describe('E2E: Kitchen Workflow', () => {
   afterAll(async () => {
     // Cleanup
     if (testFloorId) {
-      await supabase.from('floors').delete().eq('id', testFloorId);
+      await db.from('floors').delete().eq('id', testFloorId);
     }
     if (testProductId) {
-      await supabase.from('products').delete().eq('id', testProductId);
+      await db.from('products').delete().eq('id', testProductId);
     }
     if (cashierId) {
-      await supabase.from('users').delete().eq('id', cashierId);
+      await db.from('users').delete().eq('id', cashierId);
     }
   });
 
   async function createPaidOrder(tableNumber) {
     // Create table
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -194,7 +194,7 @@ describe('E2E: Kitchen Workflow', () => {
     expect(kitchenOrder1Id).toBeDefined();
 
     // Initial status should be 'received'
-    const { data: initialOrder } = await supabase
+    const { data: initialOrder } = await db
       .from('kitchen_orders')
       .select('status')
       .eq('id', kitchenOrder1Id)
@@ -214,7 +214,7 @@ describe('E2E: Kitchen Workflow', () => {
 
     // Verify status updated in database
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: preparingOrder } = await supabase
+    const { data: preparingOrder } = await db
       .from('kitchen_orders')
       .select('status, started_preparing_at')
       .eq('id', kitchenOrder1Id)
@@ -224,7 +224,7 @@ describe('E2E: Kitchen Workflow', () => {
     expect(preparingOrder.started_preparing_at).toBeDefined();
 
     // Verify main order status also updated
-    const { data: mainOrder1 } = await supabase
+    const { data: mainOrder1 } = await db
       .from('orders')
       .select('status')
       .eq('id', order1Id)
@@ -243,7 +243,7 @@ describe('E2E: Kitchen Workflow', () => {
 
     // Verify status updated
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: readyOrder } = await supabase
+    const { data: readyOrder } = await db
       .from('kitchen_orders')
       .select('status, ready_at')
       .eq('id', kitchenOrder1Id)
@@ -253,7 +253,7 @@ describe('E2E: Kitchen Workflow', () => {
     expect(readyOrder.ready_at).toBeDefined();
 
     // Verify main order status
-    const { data: mainOrder2 } = await supabase
+    const { data: mainOrder2 } = await db
       .from('orders')
       .select('status')
       .eq('id', order1Id)
@@ -272,7 +272,7 @@ describe('E2E: Kitchen Workflow', () => {
 
     // Verify final status
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: servedOrder } = await supabase
+    const { data: servedOrder } = await db
       .from('kitchen_orders')
       .select('status, served_at')
       .eq('id', kitchenOrder1Id)
@@ -290,7 +290,7 @@ describe('E2E: Kitchen Workflow', () => {
 
   it('should only display orders with confirmed payment', async () => {
     // Create an order without payment confirmation
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -346,7 +346,7 @@ describe('E2E: Kitchen Workflow', () => {
     expect(unpaidInKitchen).toBeUndefined();
 
     // Cleanup
-    await supabase.from('tables').delete().eq('id', table.id);
+    await db.from('tables').delete().eq('id', table.id);
   }, 30000);
 
   it('should filter orders by status', async () => {
@@ -414,7 +414,7 @@ describe('E2E: Kitchen Workflow', () => {
 
     // Verify all timestamps are recorded
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: order } = await supabase
+    const { data: order } = await db
       .from('kitchen_orders')
       .select('received_at, started_preparing_at, ready_at, served_at')
       .eq('id', kitchenOrder2Id)
