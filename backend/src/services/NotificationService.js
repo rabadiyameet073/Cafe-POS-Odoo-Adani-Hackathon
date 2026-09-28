@@ -2,12 +2,12 @@
  * NotificationService
  * 
  * Manages real-time notifications to different user roles.
- * Notifications are stored in the database and broadcast via Supabase real-time.
+ * Notifications are stored in the database and broadcast via MongoDB real-time.
  * 
  * Requirements: 4.2, 9.5
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 class NotificationService {
@@ -19,7 +19,7 @@ class NotificationService {
     async notifyCashier(paymentRequestId) {
         try {
             // Get payment request details
-            const { data: request, error: requestError } = await supabase
+            const { data: request, error: requestError } = await db
                 .from('cashier_payment_requests')
                 .select('table_number, total_amount, order_summary')
                 .eq('id', paymentRequestId)
@@ -35,7 +35,7 @@ class NotificationService {
             const now = new Date().toISOString();
 
             // Create notification
-            const { data: notification, error: notificationError } = await supabase
+            const { data: notification, error: notificationError } = await db
                 .from('notifications')
                 .insert({
                     type: 'payment_request',
@@ -88,7 +88,7 @@ class NotificationService {
     async notifyCustomer(orderId, type, additionalData = {}) {
         try {
             // Get order details
-            const { data: order, error: orderError } = await supabase
+            const { data: order, error: orderError } = await db
                 .from('orders')
                 .select('order_number, table_number, status')
                 .eq('id', orderId)
@@ -132,7 +132,7 @@ class NotificationService {
             }
 
             // Create notification
-            const { data: notification, error: notificationError } = await supabase
+            const { data: notification, error: notificationError } = await db
                 .from('notifications')
                 .insert({
                     type: type,
@@ -184,7 +184,7 @@ class NotificationService {
     async notifyKitchen(orderId) {
         try {
             // Get order details
-            const { data: order, error: orderError } = await supabase
+            const { data: order, error: orderError } = await db
                 .from('orders')
                 .select('order_number, table_number, total_amount')
                 .eq('id', orderId)
@@ -200,7 +200,7 @@ class NotificationService {
             const now = new Date().toISOString();
 
             // Create notification
-            const { data: notification, error: notificationError } = await supabase
+            const { data: notification, error: notificationError } = await db
                 .from('notifications')
                 .insert({
                     type: 'payment_approved',
@@ -274,7 +274,7 @@ class NotificationService {
             }
 
             // Create notification
-            const { data: notification, error: notificationError } = await supabase
+            const { data: notification, error: notificationError } = await db
                 .from('notifications')
                 .insert({
                     type: type,
@@ -321,7 +321,7 @@ class NotificationService {
      */
     async getNotificationsByRole(role, unreadOnly = false, limit = 50) {
         try {
-            let query = supabase
+            let query = db
                 .from('notifications')
                 .select('*')
                 .eq('recipient_role', role)
@@ -363,7 +363,7 @@ class NotificationService {
      */
     async markAsRead(notificationId) {
         try {
-            const { error } = await supabase
+            const { error } = await db
                 .from('notifications')
                 .update({ is_read: true })
                 .eq('id', notificationId);
@@ -396,7 +396,7 @@ class NotificationService {
      */
     async markAllAsRead(role) {
         try {
-            const { error } = await supabase
+            const { error } = await db
                 .from('notifications')
                 .update({ is_read: true })
                 .eq('recipient_role', role)
@@ -432,7 +432,7 @@ class NotificationService {
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
-            const { error } = await supabase
+            const { error } = await db
                 .from('notifications')
                 .delete()
                 .lt('created_at', cutoffDate.toISOString());
