@@ -13,7 +13,7 @@
  */
 
 const crypto = require('crypto');
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 // Secret key for token signing (should be in environment variables)
@@ -158,7 +158,7 @@ class TableTokenService {
             }
 
             // Update table_sessions to mark as expired
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('table_sessions')
                 .update({
                     status: 'expired',
@@ -185,7 +185,7 @@ class TableTokenService {
             }
 
             // Clear token from tables
-            await supabase
+            await db
                 .from('tables')
                 .update({
                     qr_code_token: null,
@@ -222,7 +222,7 @@ class TableTokenService {
             }
 
             // Query table_sessions
-            const { data: session, error } = await supabase
+            const { data: session, error } = await db
                 .from('table_sessions')
                 .select('*')
                 .eq('table_token', token)
@@ -325,7 +325,7 @@ class TableTokenService {
             const signature = this.generateTokenSignature(token, timestamp);
             
             // Check if token already exists
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('table_sessions')
                 .select('table_token')
                 .eq('table_token', token)
