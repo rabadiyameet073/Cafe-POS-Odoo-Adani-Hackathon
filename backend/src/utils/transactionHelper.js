@@ -1,8 +1,8 @@
 /**
  * Transaction Helper
  *
- * Provides pseudo-atomic transaction helpers for Supabase operations.
- * Since the Supabase JS client does not expose native PostgreSQL transactions,
+ * Provides pseudo-atomic transaction helpers for MongoDB operations.
+ * Since the MongoDB JS client does not expose native PostgreSQL transactions,
  * these helpers perform sequential operations with manual rollback on failure.
  *
  * Functions:
@@ -10,7 +10,7 @@
  *   - approvePaymentTransaction: Atomically approves a payment + updates the order
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('./logger');
 
 /**
@@ -26,7 +26,7 @@ async function createOrderTransaction(orderData, itemsData) {
 
     try {
         // Step 1 – Insert the order
-        const { data: order, error: orderError } = await supabase
+        const { data: order, error: orderError } = await db
             .from('orders')
             .insert(orderData)
             .select()
@@ -48,7 +48,7 @@ async function createOrderTransaction(orderData, itemsData) {
             order_id: order.id
         }));
 
-        const { data: items, error: itemsError } = await supabase
+        const { data: items, error: itemsError } = await db
             .from('order_items')
             .insert(itemsWithOrderId)
             .select();
@@ -57,7 +57,7 @@ async function createOrderTransaction(orderData, itemsData) {
             logger.error('Transaction: failed to insert order items – rolling back order', itemsError);
 
             // Rollback: delete the order we just created
-            await supabase.from('orders').delete().eq('id', order.id);
+            await db.from('orders').delete().eq('id', order.id);
 
             return {
                 success: false,
@@ -79,7 +79,7 @@ async function createOrderTransaction(orderData, itemsData) {
         // Best-effort rollback
         if (insertedOrder) {
             try {
-                await supabase.from('orders').delete().eq('id', insertedOrder.id);
+                await db.from('orders').delete().eq('id', insertedOrder.id);
             } catch (rollbackErr) {
                 logger.error('Transaction: rollback also failed', rollbackErr);
             }
@@ -105,7 +105,7 @@ async function approvePaymentTransaction(paymentId, approvalData) {
 
     try {
         // Step 1 – Fetch current payment
-        const { data: payment, error: fetchError } = await supabase
+        const { data: payment, error: fetchError } = await db
             .from('payments')
             .select('id, order_id, status, amount, table_number, payment_method')
             .eq('id', paymentId)
@@ -136,7 +136,7 @@ async function approvePaymentTransaction(paymentId, approvalData) {
         const now = approvalData.approved_at || new Date().toISOString();
 
         // Step 2 – Update payment to approved / completed
-        const { error: paymentUpdateError } = await supabase
+        const { error: paymentUpdateError } = await db
             .from('payments')
             .update({
                 status: 'completed',
@@ -156,7 +156,7 @@ async function approvePaymentTransaction(paymentId, approvalData) {
         }
 
         // Step 3 – Update order status to paid
-        const { error: orderUpdateError } = await supabase
+        const { error: orderUpdateError } = await db
             .from('orders')
             .update({
                 payment_status: 'paid',
@@ -170,7 +170,7 @@ async function approvePaymentTransaction(paymentId, approvalData) {
             logger.error('Transaction: failed to update order – rolling back payment', orderUpdateError);
 
             // Rollback: revert payment to previous state
-            await supabase
+            await db
                 .from('payments')
                 .update({
                     status: previousPaymentStatus,
@@ -204,7 +204,7 @@ async function approvePaymentTransaction(paymentId, approvalData) {
         // Best-effort rollback
         if (previousPaymentStatus) {
             try {
-                await supabase
+                await db
                     .from('payments')
                     .update({ status: previousPaymentStatus, updated_at: new Date().toISOString() })
                     .eq('id', paymentId);
