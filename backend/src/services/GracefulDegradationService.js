@@ -139,9 +139,9 @@ class GracefulDegradationService {
         try {
             // In a real implementation, this would ping the UPI gateway
             // For now, we'll simulate a health check
-            const { supabase } = require('../config/db');
+            const { db } = require('../config/db');
             
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('payment_methods')
                 .select('is_enabled')
                 .eq('name', 'upi')
@@ -165,9 +165,9 @@ class GracefulDegradationService {
     async testTimerService() {
         try {
             // Check if timer service can access database
-            const { supabase } = require('../config/db');
+            const { db } = require('../config/db');
             
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('table_sessions')
                 .select('id')
                 .eq('timer_status', 'running')
