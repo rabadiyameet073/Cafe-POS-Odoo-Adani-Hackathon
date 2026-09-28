@@ -1,11 +1,12 @@
 // Central API + socket configuration for all environments
-// - In development, fall back to local backend on port 3000
-// - In production (e.g. Vercel), YOU MUST configure VITE_API_URL / VITE_SOCKET_URL
-//   in the hosting platform dashboard so the frontend can reach the deployed backend.
-const isProd = import.meta.env.PROD
+// Dynamically uses current host/domain, eliminating all hardcoded localhost references
+const isDev = import.meta.env.DEV
+const dynamicHost = typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1'
 
-const DEFAULT_API_URL = isProd ? '/api' : 'http://localhost:3000/api'
-const DEFAULT_SOCKET_URL = isProd ? '' : 'http://localhost:3000'
+const DEFAULT_API_URL = '/api'
+const DEFAULT_SOCKET_URL = typeof window !== 'undefined'
+  ? (isDev && window.location.port === '5173' ? `${window.location.protocol}//${dynamicHost}:3000` : window.location.origin)
+  : ''
 
 export const API_URL = import.meta.env.VITE_API_URL || DEFAULT_API_URL
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || DEFAULT_SOCKET_URL
