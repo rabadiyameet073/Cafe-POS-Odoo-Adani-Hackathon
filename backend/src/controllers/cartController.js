@@ -1,4 +1,4 @@
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const TableTokenService = require('../services/TableTokenService');
 const { formatResponse } = require('../utils/helpers');
 const { catchAsync, NotFoundError, ValidationError, AuthorizationError } = require('../utils/errorHandler');
@@ -27,7 +27,7 @@ const addToCart = catchAsync(async (req, res) => {
     }
 
     // Get product details
-    const { data: product, error: productError } = await supabase
+    const { data: product, error: productError } = await db
         .from('products')
         .select('id, name, price, tax_percentage, is_available')
         .eq('id', product_id)
@@ -44,7 +44,7 @@ const addToCart = catchAsync(async (req, res) => {
     let variantPrice = 0;
     let variantName = null;
     if (variant_id) {
-        const { data: variant, error: variantError } = await supabase
+        const { data: variant, error: variantError } = await db
             .from('product_variants')
             .select('id, name, extra_price')
             .eq('id', variant_id)
@@ -61,7 +61,7 @@ const addToCart = catchAsync(async (req, res) => {
     const unitPrice = parseFloat(product.price) + parseFloat(variantPrice);
 
     // Check if item already exists in cart
-    const { data: existingItem } = await supabase
+    const { data: existingItem } = await db
         .from('cart_items')
         .select('id, quantity')
         .eq('table_token', table_token)
@@ -73,7 +73,7 @@ const addToCart = catchAsync(async (req, res) => {
     if (existingItem) {
         // Update quantity
         const newQuantity = existingItem.quantity + quantity;
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('cart_items')
             .update({
                 quantity: newQuantity,
@@ -89,7 +89,7 @@ const addToCart = catchAsync(async (req, res) => {
         cartItem = data;
     } else {
         // Create new cart item
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('cart_items')
             .insert({
                 table_token,
@@ -138,7 +138,7 @@ const getCart = catchAsync(async (req, res) => {
     }
 
     // Get cart items with product details
-    const { data: cartItems, error } = await supabase
+    const { data: cartItems, error } = await db
         .from('cart_items')
         .select(`
             id,
@@ -217,7 +217,7 @@ const removeCartItem = catchAsync(async (req, res) => {
     }
 
     // Verify item belongs to this cart
-    const { data: item, error: fetchError } = await supabase
+    const { data: item, error: fetchError } = await db
         .from('cart_items')
         .select('id')
         .eq('id', itemId)
@@ -229,7 +229,7 @@ const removeCartItem = catchAsync(async (req, res) => {
     }
 
     // Delete the item
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await db
         .from('cart_items')
         .delete()
         .eq('id', itemId);
@@ -262,7 +262,7 @@ const clearCart = catchAsync(async (req, res) => {
     }
 
     // Delete all items for this token
-    const { error } = await supabase
+    const { error } = await db
         .from('cart_items')
         .delete()
         .eq('table_token', tableToken);
