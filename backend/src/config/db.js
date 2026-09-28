@@ -457,7 +457,6 @@ connectMongoDB().catch(err => {
 
 module.exports = {
     db,
-    supabase: db, // alias so existing code continues working
     testConnection,
     getConnectionStatus,
     setSocketIO
