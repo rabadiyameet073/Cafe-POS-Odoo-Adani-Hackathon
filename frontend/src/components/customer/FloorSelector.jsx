@@ -27,7 +27,7 @@ const FloorSelector = () => {
   }, [error])
 
   useEffect(() => {
-    // Set up Supabase subscription to floors table for real-time updates
+    // Set up MongoDB subscription to floors table for real-time updates
     const subscription = subscribeToTable('floors', null, (payload) => {
       console.log('Floor change detected:', payload)
       
