@@ -13,7 +13,7 @@
  * Requirements: 4.1, 5.2, 5.3, 6.1, 7.1, Security NFR 2
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const TableTokenService = require('./TableTokenService');
 const MonitoringService = require('./MonitoringService');
 const logger = require('../utils/logger');
@@ -127,7 +127,7 @@ class PaymentService {
             }
 
             // Get order details
-            const { data: order, error: orderError } = await supabase
+            const { data: order, error: orderError } = await db
                 .from('orders')
                 .select(`
                     *,
@@ -153,7 +153,7 @@ class PaymentService {
             const now = new Date().toISOString();
 
             // Create payment record
-            const { data: payment, error: paymentError } = await supabase
+            const { data: payment, error: paymentError } = await db
                 .from('payments')
                 .insert({
                     order_id: orderId,
@@ -183,7 +183,7 @@ class PaymentService {
                 price: item.line_total
             }));
 
-            const { error: requestError } = await supabase
+            const { error: requestError } = await db
                 .from('cashier_payment_requests')
                 .insert({
                     payment_id: payment.id,
@@ -199,7 +199,7 @@ class PaymentService {
             if (requestError) {
                 logger.error('Error creating cashier request:', requestError);
                 // Rollback payment
-                await supabase.from('payments').delete().eq('id', payment.id);
+                await db.from('payments').delete().eq('id', payment.id);
                 return {
                     success: false,
                     error: 'Failed to create cashier request'
@@ -207,7 +207,7 @@ class PaymentService {
             }
 
             // Update order payment status
-            await supabase
+            await db
                 .from('orders')
                 .update({
                     payment_status: 'pending_cash',
@@ -263,7 +263,7 @@ class PaymentService {
             }
 
             // Get order details
-            const { data: order, error: orderError } = await supabase
+            const { data: order, error: orderError } = await db
                 .from('orders')
                 .select('order_number, payment_status')
                 .eq('id', orderId)
@@ -284,7 +284,7 @@ class PaymentService {
             }
 
             // Get UPI configuration
-            const { data: upiConfig, error: configError } = await supabase
+            const { data: upiConfig, error: configError } = await db
                 .from('payment_methods')
                 .select('upi_id, merchant_name')
                 .eq('name', 'upi')
@@ -309,7 +309,7 @@ class PaymentService {
             const upiString = `upi://pay?pa=${encodeURIComponent(upiConfig.upi_id)}&pn=${encodeURIComponent(upiConfig.merchant_name)}&am=${amount.toFixed(2)}&tr=${transactionRef}&tn=${encodeURIComponent(`Order ${order.order_number}`)}&cu=INR`;
 
             // Create payment record
-            const { data: payment, error: paymentError } = await supabase
+            const { data: payment, error: paymentError } = await db
                 .from('payments')
                 .insert({
                     order_id: orderId,
@@ -337,7 +337,7 @@ class PaymentService {
             }
 
             // Update order payment status
-            await supabase
+            await db
                 .from('orders')
                 .update({
                     payment_status: 'pending_upi',
@@ -391,7 +391,7 @@ class PaymentService {
             const { paymentId: approvedPaymentId, orderId } = transactionResult.result;
 
             // Update cashier payment request
-            await supabase
+            await db
                 .from('cashier_payment_requests')
                 .update({
                     status: 'approved',
@@ -449,7 +449,7 @@ class PaymentService {
             const now = new Date().toISOString();
 
             // Get payment details
-            const { data: payment, error: paymentError } = await supabase
+            const { data: payment, error: paymentError } = await db
                 .from('payments')
                 .select('order_id, status, payment_method')
                 .eq('id', paymentId)
@@ -477,7 +477,7 @@ class PaymentService {
             }
 
             // Update payment status
-            const { error: updateError } = await supabase
+            const { error: updateError } = await db
                 .from('payments')
                 .update({
                     status: 'rejected',
@@ -498,7 +498,7 @@ class PaymentService {
             }
 
             // Update cashier payment request
-            await supabase
+            await db
                 .from('cashier_payment_requests')
                 .update({
                     status: 'rejected',
@@ -509,7 +509,7 @@ class PaymentService {
                 .eq('payment_id', paymentId);
 
             // Update order status
-            await supabase
+            await db
                 .from('orders')
                 .update({
                     payment_status: 'failed',
@@ -566,7 +566,7 @@ class PaymentService {
             const now = new Date().toISOString();
 
             // Get payment by order and reference
-            const { data: payment, error: paymentError } = await supabase
+            const { data: payment, error: paymentError } = await db
                 .from('payments')
                 .select('*')
                 .eq('order_id', orderId)
@@ -630,7 +630,7 @@ class PaymentService {
             this.markTransactionProcessed(transactionId);
 
             // Update payment status
-            const { error: updateError } = await supabase
+            const { error: updateError } = await db
                 .from('payments')
                 .update({
                     status: 'completed',
@@ -652,7 +652,7 @@ class PaymentService {
             }
 
             // Update order status
-            await supabase
+            await db
                 .from('orders')
                 .update({
                     payment_status: 'paid',
@@ -704,7 +704,7 @@ class PaymentService {
      */
     async getPaymentById(paymentId) {
         try {
-            const { data: payment, error } = await supabase
+            const { data: payment, error } = await db
                 .from('payments')
                 .select('*')
                 .eq('id', paymentId)
