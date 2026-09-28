@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-// Use real controller with Supabase
+// Use real controller with MongoDB
 const authController = require('../controllers/authController');
 const { verifyToken } = require('../middleware/authMiddleware');
 const { validate } = require('../middleware/validationMiddleware');
