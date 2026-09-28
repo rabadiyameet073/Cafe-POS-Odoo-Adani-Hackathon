@@ -15,7 +15,7 @@ const KitchenOrderDisplay = ({ onStatusUpdate }) => {
   useEffect(() => {
     fetchKitchenOrders()
 
-    // Set up Supabase subscription to kitchen_orders table
+    // Set up MongoDB subscription to kitchen_orders table
     const channel = subscribeToTable('kitchen_orders', null, (payload) => {
       console.log('Kitchen order change detected:', payload)
       
