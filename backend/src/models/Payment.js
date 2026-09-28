@@ -1,11 +1,11 @@
 
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 const Payment = {
     async getAllMethods() {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('payment_methods')
             .select('*')
             .order('display_name', { ascending: true });
@@ -15,7 +15,7 @@ const Payment = {
     },
 
     async getEnabledMethods() {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('payment_methods')
             .select('*')
             .eq('is_enabled', true)
@@ -27,7 +27,7 @@ const Payment = {
 
 
     async getMethodById(id) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('payment_methods')
             .select('*')
             .eq('id', id)
@@ -39,7 +39,7 @@ const Payment = {
 
 
     async createMethod(methodData) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('payment_methods')
             .insert(methodData)
             .select('*')
@@ -51,7 +51,7 @@ const Payment = {
 
 
     async updateMethod(id, updates) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('payment_methods')
             .update({ ...updates, updated_at: new Date().toISOString() })
             .eq('id', id)
@@ -71,7 +71,7 @@ const Payment = {
     },
 
     async findAll(filters = {}) {
-        let query = supabase
+        let query = db
             .from('payments')
             .select('*, orders(id, order_number, table_number, table_token)')
             .order('created_at', { ascending: false });
@@ -92,7 +92,7 @@ const Payment = {
 
 
     async findById(id) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('payments')
             .select('*, orders(id, order_number, total_amount, table_number, table_token)')
             .eq('id', id)
@@ -104,7 +104,7 @@ const Payment = {
 
 
     async findByOrderId(orderId) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('payments')
             .select('*')
             .eq('order_id', orderId);
@@ -114,7 +114,7 @@ const Payment = {
     },
 
     async create(paymentData) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('payments')
             .insert(paymentData)
             .select('*')
@@ -125,7 +125,7 @@ const Payment = {
     },
 
     async update(id, updates) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('payments')
             .update(updates)
             .eq('id', id)
