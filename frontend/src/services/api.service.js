@@ -64,7 +64,7 @@ export const productService = {
   deleteVariant: (id, variantId) => api.delete(`/products/${id}/variants/${variantId}`)
 }
 
-// Cart Services (table-token based, backed by Supabase)
+// Cart Services (table-token based, backed by MongoDB)
 export const cartService = {
   addToCart: (payload) => api.post('/cart/add', payload),
   getCartByToken: (tableToken) => api.get(`/cart/${tableToken}`),
