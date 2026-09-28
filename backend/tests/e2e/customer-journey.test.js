@@ -11,7 +11,7 @@
 
 const request = require('supertest');
 const {
-  supabase,
+  db,
   createTestUser,
   createTestFloor,
   createTestTable,
@@ -94,7 +94,7 @@ describe('E2E: Complete Customer Journey', () => {
 
     // Verify table status changed to occupied (real-time update simulation)
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: updatedTable } = await supabase
+    const { data: updatedTable } = await db
       .from('tables')
       .select('status')
       .eq('id', testTableId)
@@ -139,7 +139,7 @@ describe('E2E: Complete Customer Journey', () => {
 
     // Verify cashier receives payment request (real-time update simulation)
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: paymentRequest } = await supabase
+    const { data: paymentRequest } = await db
       .from('cashier_payment_requests')
       .select('*')
       .eq('payment_id', paymentId)
@@ -161,7 +161,7 @@ describe('E2E: Complete Customer Journey', () => {
 
     // Verify payment confirmed (real-time update simulation)
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: confirmedPayment } = await supabase
+    const { data: confirmedPayment } = await db
       .from('payments')
       .select('status, payment_confirmed_at')
       .eq('id', paymentId)
@@ -171,7 +171,7 @@ describe('E2E: Complete Customer Journey', () => {
 
     // Step 8: Verify kitchen receives order (real-time update simulation)
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: kitchenOrder } = await supabase
+    const { data: kitchenOrder } = await db
       .from('kitchen_orders')
       .select('*')
       .eq('order_id', orderId)
@@ -189,7 +189,7 @@ describe('E2E: Complete Customer Journey', () => {
 
     // Verify order status updated (real-time update simulation)
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: preparingOrder } = await supabase
+    const { data: preparingOrder } = await db
       .from('orders')
       .select('status')
       .eq('id', orderId)
@@ -206,7 +206,7 @@ describe('E2E: Complete Customer Journey', () => {
 
     // Verify order status updated (real-time update simulation)
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: readyOrder } = await supabase
+    const { data: readyOrder } = await db
       .from('orders')
       .select('status')
       .eq('id', orderId)
@@ -214,7 +214,7 @@ describe('E2E: Complete Customer Journey', () => {
     expect(readyOrder.status).toBe('ready');
 
     // Step 11: Verify timer is running
-    const { data: session } = await supabase
+    const { data: session } = await db
       .from('table_sessions')
       .select('timer_status, timer_started_at, timer_ends_at')
       .eq('table_token', tableToken)
@@ -238,7 +238,7 @@ describe('E2E: Complete Customer Journey', () => {
 
     // Verify table is freed (real-time update simulation)
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: freedTable } = await supabase
+    const { data: freedTable } = await db
       .from('tables')
       .select('status, qr_code_token')
       .eq('id', testTableId)
@@ -256,7 +256,7 @@ describe('E2E: Complete Customer Journey', () => {
     let updateReceived = false;
     let updateTime = null;
     
-    const channel = supabase
+    const channel = db
       .channel('test-table-updates')
       .on('postgres_changes', 
         { event: 'UPDATE', schema: 'public', table: 'tables', filter: `id=eq.${testTable.id}` },
@@ -289,6 +289,6 @@ describe('E2E: Complete Customer Journey', () => {
 
     // Cleanup
     await channel.unsubscribe();
-    await supabase.from('tables').delete().eq('id', testTable.id);
+    await db.from('tables').delete().eq('id', testTable.id);
   }, 30000);
 });
