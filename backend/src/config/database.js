@@ -2,10 +2,10 @@
  * Database Configuration
  * 
  * This module provides database utilities and query helpers.
- * Uses Supabase for PostgreSQL database access.
+ * Uses MongoDB for PostgreSQL database access.
  */
 
-const { supabase } = require('./supabase');
+const { db } = require('./db');
 const logger = require('../utils/logger');
 
 /**
@@ -13,8 +13,8 @@ const logger = require('../utils/logger');
  */
 const db = {
     /**
-     * Execute a raw SQL query using Supabase RPC
-     * Note: This requires creating corresponding database functions in Supabase
+     * Execute a raw SQL query using MongoDB RPC
+     * Note: This requires creating corresponding database functions in MongoDB
      * 
      * @param {string} functionName - Name of the database function
      * @param {object} params - Parameters to pass to the function
@@ -22,7 +22,7 @@ const db = {
      */
     async rpc(functionName, params = {}) {
         try {
-            const { data, error } = await supabase.rpc(functionName, params);
+            const { data, error } = await db.rpc(functionName, params);
 
             if (error) {
                 logger.error(`RPC error for ${functionName}:`, error);
@@ -40,15 +40,15 @@ const db = {
      * Get a table reference for querying
      * 
      * @param {string} tableName - Name of the table
-     * @returns {object} Supabase table reference
+     * @returns {object} MongoDB table reference
      */
     from(tableName) {
-        return supabase.from(tableName);
+        return db.from(tableName);
     },
 
     /**
      * Begin a transaction-like operation
-     * Note: Supabase doesn't support true transactions via JS client.
+     * Note: MongoDB doesn't support true transactions via JS client.
      * For critical operations, use database functions or stored procedures.
      * 
      * @param {Function} callback - Async function to execute
@@ -58,7 +58,7 @@ const db = {
         // Note: For true ACID transactions, create PostgreSQL functions
         // and call them via RPC. This is a simplified wrapper.
         try {
-            return await callback(supabase);
+            return await callback(db);
         } catch (err) {
             logger.error('Transaction error:', err.message);
             throw err;
