@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import AdminLayout from '../../components/layouts/AdminLayout'
 import { floorService, tableService } from '../../services/api.service'
 import { getFloors as getFloorsDB, getAllTablesWithTimers } from '../../services/cafe.service'
-import { supabase } from '../../services/db.service'
+import { db } from '../../services/db.service'
 import Loading from '../../components/Loading'
 import { showToast } from '../../components/Toast'
 import Icon from '../../components/Icons'
@@ -18,7 +18,7 @@ const Floors = () => {
   useEffect(() => { fetchData() }, [])
 
   const fetchData = async () => {
-    // Fetch independently using Supabase-direct as primary, backend API as fallback
+    // Fetch independently using MongoDB-direct as primary, backend API as fallback
     try {
       const floorsData = await getFloorsDB()
       setFloors(floorsData || [])
@@ -35,7 +35,7 @@ const Floors = () => {
     } catch {
       // Fallback: simple tables query for floor stats
       try {
-        const { data } = await supabase.from('tables').select('id, floor_id, status, table_number, seats').eq('is_active', true)
+        const { data } = await db.from('tables').select('id, floor_id, status, table_number, seats').eq('is_active', true)
         setTables(data || [])
       } catch {
         try {
@@ -60,7 +60,7 @@ const Floors = () => {
         try {
           await floorService.updateFloor(editingFloor.id, payload)
         } catch {
-          const { error } = await supabase.from('floors').update(payload).eq('id', editingFloor.id)
+          const { error } = await db.from('floors').update(payload).eq('id', editingFloor.id)
           if (error) throw error
         }
         showToast('Floor updated successfully')
@@ -68,7 +68,7 @@ const Floors = () => {
         try {
           await floorService.createFloor(payload)
         } catch {
-          const { error } = await supabase.from('floors').insert({ ...payload, is_active: true })
+          const { error } = await db.from('floors').insert({ ...payload, is_active: true })
           if (error) throw error
         }
         showToast('Floor created successfully')
@@ -99,7 +99,7 @@ const Floors = () => {
       try {
         await floorService.deleteFloor(id)
       } catch {
-        const { error } = await supabase.from('floors').update({ is_active: false }).eq('id', id)
+        const { error } = await db.from('floors').update({ is_active: false }).eq('id', id)
         if (error) throw error
       }
       showToast('Floor deleted successfully')
