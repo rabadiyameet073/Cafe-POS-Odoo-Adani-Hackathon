@@ -19,7 +19,7 @@ let io = null;
 function initializeSocketIO(httpServer) {
     io = new Server(httpServer, {
         cors: {
-            origin: env.CLIENT_URL || '*',
+            origin: (origin, callback) => callback(null, true),
             methods: ['GET', 'POST'],
             credentials: true
         },

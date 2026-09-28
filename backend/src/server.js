@@ -19,8 +19,10 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 const io = initializeSocketIO(server);
 
-// Make io accessible throughout the app
+// Make io accessible throughout the app and to Supabase adapter
 app.set('io', io);
+const { setSocketIO } = require('./config/supabase');
+setSocketIO(io);
 
 // Get port from environment
 const PORT = env.PORT || 3000;

@@ -15,17 +15,15 @@ const env = {
     NODE_ENV: process.env.NODE_ENV || 'development',
     PORT: parseInt(process.env.PORT, 10) || 3000,
 
-    // Supabase Configuration
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
-    SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY,
+    // MongoDB Configuration
+    MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/cafe_pos',
 
     // JWT Configuration
     JWT_SECRET: process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? undefined : 'default_jwt_secret_change_in_production'),
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
 
     // Client URL for CORS
-    CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
+    CLIENT_URL: process.env.CLIENT_URL || '*',
 
     // Optional Payment Configuration
     RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
@@ -44,7 +42,7 @@ const env = {
 };
 
 // Validate required environment variables
-const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_KEY', 'JWT_SECRET'];
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
 const missingEnvVars = requiredEnvVars.filter(varName => !env[varName]);
 
 if (missingEnvVars.length > 0 && env.NODE_ENV !== 'development') {

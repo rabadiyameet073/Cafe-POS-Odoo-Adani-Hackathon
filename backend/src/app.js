@@ -68,23 +68,31 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Supabase connectivity diagnostic endpoint
+// Database connectivity diagnostic endpoint
 app.get('/api/db-status', async (req, res) => {
-    const { testConnection, getConnectionStatus } = require('./config/supabase');
-    const supabaseUrl = env.SUPABASE_URL || 'not set';
-    const hasAnonKey = !!(env.SUPABASE_ANON_KEY && env.SUPABASE_ANON_KEY.length > 20);
-    const hasServiceKey = !!(env.SUPABASE_SERVICE_KEY && env.SUPABASE_SERVICE_KEY.length > 20);
-
+    const { testConnection, getConnectionStatus } = require('./config/mongodb');
     const connected = await testConnection();
 
     res.status(connected ? 200 : 503).json({
-        supabase_url: supabaseUrl,
-        has_anon_key: hasAnonKey,
-        has_service_key: hasServiceKey,
+        database: 'MongoDB',
         connected,
-        hint: connected ? '✅ Supabase is reachable' : '❌ Cannot reach Supabase – go to https://supabase.com/dashboard and make sure the project is ACTIVE (not paused)'
+        status: connected ? '✅ MongoDB is connected' : '❌ Cannot reach MongoDB – check your MONGODB_URI in .env'
     });
 });
+
+// Ensure MongoDB connection before handling requests (crucial for Vercel serverless containers)
+const { connectMongoDB } = require('./config/mongodb');
+app.use(async (req, res, next) => {
+    try {
+        await connectMongoDB();
+    } catch (err) {
+        logger.debug('Connection middleware note:', err.message);
+    }
+    next();
+});
+
+// Emulated PostgREST endpoints for transparent client compatibility
+app.use('/rest/v1', require('./routes/restProxy'));
 
 // API routes
 app.use('/api', routes);
