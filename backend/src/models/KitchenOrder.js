@@ -4,7 +4,7 @@
  * Database operations for kitchen_orders table.
  */
 
-const { supabase } = require('../config/db');
+const { db } = require('../config/db');
 const logger = require('../utils/logger');
 
 const KitchenOrder = {
@@ -12,7 +12,7 @@ const KitchenOrder = {
      * Find all kitchen orders with optional filters
      */
     async findAll(filters = {}) {
-        let query = supabase
+        let query = db
             .from('kitchen_orders')
             .select('*, orders(id, order_number, table_id, tables(table_number))')
             .order('received_at', { ascending: true });
@@ -42,7 +42,7 @@ const KitchenOrder = {
      * Find kitchen order by ID
      */
     async findById(id) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('kitchen_orders')
             .select('*, orders(id, order_number, table_id, tables(table_number))')
             .eq('id', id)
@@ -56,7 +56,7 @@ const KitchenOrder = {
      * Find kitchen order by order ID
      */
     async findByOrderId(orderId) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('kitchen_orders')
             .select('*, orders(id, order_number, table_id, tables(table_number))')
             .eq('order_id', orderId)
@@ -70,7 +70,7 @@ const KitchenOrder = {
      * Create a new kitchen order
      */
     async create(kitchenOrderData) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('kitchen_orders')
             .insert(kitchenOrderData)
             .select('*')
@@ -84,7 +84,7 @@ const KitchenOrder = {
      * Update a kitchen order
      */
     async update(id, updates) {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('kitchen_orders')
             .update({ ...updates, updated_at: new Date().toISOString() })
             .eq('id', id)
@@ -147,7 +147,7 @@ const KitchenOrder = {
      * Delete a kitchen order (for picked up orders)
      */
     async delete(id) {
-        const { error } = await supabase
+        const { error } = await db
             .from('kitchen_orders')
             .delete()
             .eq('id', id);
