@@ -11,7 +11,7 @@
  */
 
 const request = require('supertest');
-const { db: supabase } = require('../../src/config/db');
+const { db } = require('../../src/config/db');
 
 const app = require('../../src/app');
 
@@ -24,7 +24,7 @@ describe('E2E: Admin Operations', () => {
 
   beforeAll(async () => {
     // Create test admin user
-    const { data: admin } = await supabase
+    const { data: admin } = await db
       .from('users')
       .insert({
         email: `admin-${Date.now()}@test.com`,
@@ -38,7 +38,7 @@ describe('E2E: Admin Operations', () => {
     adminId = admin.id;
 
     // Create test cashier
-    const { data: cashier } = await supabase
+    const { data: cashier } = await db
       .from('users')
       .insert({
         email: `admin-cashier-${Date.now()}@test.com`,
@@ -52,7 +52,7 @@ describe('E2E: Admin Operations', () => {
     cashierId = cashier.id;
 
     // Create test floor
-    const { data: floor } = await supabase
+    const { data: floor } = await db
       .from('floors')
       .insert({
         name: `Admin Floor ${Date.now()}`,
@@ -64,7 +64,7 @@ describe('E2E: Admin Operations', () => {
     testFloorId = floor.id;
 
     // Create test product
-    const { data: category } = await supabase
+    const { data: category } = await db
       .from('product_categories')
       .insert({
         name: `Admin Category ${Date.now()}`,
@@ -73,7 +73,7 @@ describe('E2E: Admin Operations', () => {
       .select()
       .single();
 
-    const { data: product } = await supabase
+    const { data: product } = await db
       .from('products')
       .insert({
         category_id: category.id,
@@ -91,19 +91,19 @@ describe('E2E: Admin Operations', () => {
   afterAll(async () => {
     // Cleanup
     for (const tableId of createdTableIds) {
-      await supabase.from('tables').delete().eq('id', tableId);
+      await db.from('tables').delete().eq('id', tableId);
     }
     if (testFloorId) {
-      await supabase.from('floors').delete().eq('id', testFloorId);
+      await db.from('floors').delete().eq('id', testFloorId);
     }
     if (testProductId) {
-      await supabase.from('products').delete().eq('id', testProductId);
+      await db.from('products').delete().eq('id', testProductId);
     }
     if (adminId) {
-      await supabase.from('users').delete().eq('id', adminId);
+      await db.from('users').delete().eq('id', adminId);
     }
     if (cashierId) {
-      await supabase.from('users').delete().eq('id', cashierId);
+      await db.from('users').delete().eq('id', cashierId);
     }
   });
 
@@ -127,7 +127,7 @@ describe('E2E: Admin Operations', () => {
     createdTableIds.push(response.body.table_id);
 
     // Verify table was created in database
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .select('*')
       .eq('id', response.body.table_id)
@@ -153,7 +153,7 @@ describe('E2E: Admin Operations', () => {
 
   it('should monitor occupied tables with timer and order status', async () => {
     // Create and occupy a table
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -231,7 +231,7 @@ describe('E2E: Admin Operations', () => {
 
   it('should extend timer successfully', async () => {
     // Create occupied table with timer
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -284,7 +284,7 @@ describe('E2E: Admin Operations', () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Get session ID
-    const { data: session } = await supabase
+    const { data: session } = await db
       .from('table_sessions')
       .select('id, timer_ends_at')
       .eq('table_token', selectionResponse.body.table_token)
@@ -306,7 +306,7 @@ describe('E2E: Admin Operations', () => {
     expect(extendResponse.body.new_timer_ends_at).toBeDefined();
 
     // Verify timer was extended
-    const { data: extendedSession } = await supabase
+    const { data: extendedSession } = await db
       .from('table_sessions')
       .select('timer_ends_at, timer_status')
       .eq('id', session.id)
@@ -320,7 +320,7 @@ describe('E2E: Admin Operations', () => {
     expect(extendedSession.timer_status).toBe('extended');
 
     // Verify extension logged
-    const { data: log } = await supabase
+    const { data: log } = await db
       .from('table_timer_logs')
       .select('*')
       .eq('session_id', session.id)
@@ -332,7 +332,7 @@ describe('E2E: Admin Operations', () => {
 
   it('should reset timer to 39 minutes', async () => {
     // Create occupied table
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -385,7 +385,7 @@ describe('E2E: Admin Operations', () => {
     // Wait a bit so timer is not at exactly 39 minutes
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    const { data: session } = await supabase
+    const { data: session } = await db
       .from('table_sessions')
       .select('id')
       .eq('table_token', selectionResponse.body.table_token)
@@ -404,7 +404,7 @@ describe('E2E: Admin Operations', () => {
     expect(resetResponse.body.new_timer_ends_at).toBeDefined();
 
     // Verify timer is now 39 minutes from current time
-    const { data: resetSession } = await supabase
+    const { data: resetSession } = await db
       .from('table_sessions')
       .select('timer_ends_at')
       .eq('id', session.id)
@@ -421,7 +421,7 @@ describe('E2E: Admin Operations', () => {
 
   it('should monitor all payments with correct payment method display', async () => {
     // Create cash payment
-    const { data: cashTable } = await supabase
+    const { data: cashTable } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -472,7 +472,7 @@ describe('E2E: Admin Operations', () => {
       .expect(200);
 
     // Create UPI payment
-    const { data: upiTable } = await supabase
+    const { data: upiTable } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -550,7 +550,7 @@ describe('E2E: Admin Operations', () => {
   }, 60000);
 
   it('should delete available table successfully', async () => {
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -569,7 +569,7 @@ describe('E2E: Admin Operations', () => {
     expect(deleteResponse.body.success).toBe(true);
 
     // Verify table was deleted
-    const { data: deletedTable } = await supabase
+    const { data: deletedTable } = await db
       .from('tables')
       .select('*')
       .eq('id', table.id)
@@ -579,7 +579,7 @@ describe('E2E: Admin Operations', () => {
   }, 30000);
 
   it('should require confirmation to delete occupied table', async () => {
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -608,7 +608,7 @@ describe('E2E: Admin Operations', () => {
     expect(deleteResponse.body.message).toContain('occupied');
 
     // Verify table still exists
-    const { data: stillExists } = await supabase
+    const { data: stillExists } = await db
       .from('tables')
       .select('*')
       .eq('id', table.id)
@@ -618,7 +618,7 @@ describe('E2E: Admin Operations', () => {
   }, 30000);
 
   it('should manually free occupied table', async () => {
-    const { data: table } = await supabase
+    const { data: table } = await db
       .from('tables')
       .insert({
         floor_id: testFloorId,
@@ -639,7 +639,7 @@ describe('E2E: Admin Operations', () => {
       .expect(200);
 
     // Verify occupied
-    const { data: occupiedTable } = await supabase
+    const { data: occupiedTable } = await db
       .from('tables')
       .select('status')
       .eq('id', table.id)
@@ -661,7 +661,7 @@ describe('E2E: Admin Operations', () => {
 
     // Verify table is now available
     await new Promise(resolve => setTimeout(resolve, 500));
-    const { data: freedTable } = await supabase
+    const { data: freedTable } = await db
       .from('tables')
       .select('status, qr_code_token')
       .eq('id', table.id)
@@ -671,7 +671,7 @@ describe('E2E: Admin Operations', () => {
     expect(freedTable.qr_code_token).toBeNull();
 
     // Verify session was ended
-    const { data: session } = await supabase
+    const { data: session } = await db
       .from('table_sessions')
       .select('status, freed_by, freed_reason')
       .eq('table_token', selectionResponse.body.table_token)
